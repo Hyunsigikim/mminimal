@@ -203,6 +203,7 @@
     </style>
 </head>
 <body>
+<<<<<<< HEAD
     <div class="container-fluid py-4" style="padding-top: 80px !important;">
         <div class="row justify-content-center">
             <div class="col-lg-10 col-xl-8">
@@ -215,13 +216,37 @@
                                 <a href="/boards" class="btn btn-outline-secondary btn-sm d-flex align-items-center me-3" style="border-radius: 20px; padding: 8px 16px;">
                                     <i class="bi bi-chevron-left me-2"></i>
                                     뒤로가기
+=======
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-11 col-xl-10 col-xxl-9">
+
+                <!-- 네비게이션 바 공간 확보용 투명 div -->
+                <div style="height: 60px; visibility: hidden;"></div>
+
+                <!-- Top Navigation -->
+                <div class="card border-0 shadow-sm mb-4" style="position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: calc(100% - 2rem); max-width: 1400px; z-index: 1000; background: white;">
+                    <div class="card-body py-2 py-md-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 gap-md-3">
+                            <!-- Left: Back button -->
+                            <div class="d-flex align-items-center">
+                                <a href="/boards" class="btn btn-outline-secondary btn-sm d-flex align-items-center" style="border-radius: 20px; padding: 6px 12px; font-size: 0.875rem;">
+                                    <i class="bi bi-chevron-left me-1 me-md-2"></i>
+                                    <span class="d-none d-sm-inline">뒤로가기</span>
+>>>>>>> 0e776da (변경사항 반영)
                                 </a>
                             </div>
 
                             <!-- Center: Board title -->
                             <div class="flex-grow-1 text-center">
+<<<<<<< HEAD
                                 <h1 class="card-title mb-0" style="font-size: 1.5rem; font-weight: 600;">
                                     <%= (board && board.name) ? board.name : ('Board ' + boardId) %>
+=======
+                                <h1 class="card-title mb-0" style="font-size: 1.25rem; font-weight: 600; margin: 0;">
+                                    <span class="d-none d-md-inline"><%= (board && board.name) ? board.name : ('Board ' + boardId) %></span>
+                                    <span class="d-md-none"><%= (board && board.name) ? board.name.substring(0, 8) + (board.name.length > 8 ? '...' : '') : ('Board ' + boardId) %></span>
+>>>>>>> 0e776da (변경사항 반영)
                                 </h1>
                             </div>
 
@@ -231,9 +256,15 @@
                                 <div class="dropdown">
                                     <button class="btn btn-outline-primary btn-sm dropdown-toggle d-flex align-items-center"
                                             type="button" data-bs-toggle="dropdown" aria-expanded="false"
+<<<<<<< HEAD
                                             style="border-radius: 20px; padding: 8px 16px;">
                                         <i class="bi bi-person-circle me-2"></i>
                                         <%= currentUser ? currentUser.username : '사용자' %>
+=======
+                                            style="border-radius: 20px; padding: 6px 12px; font-size: 0.875rem;">
+                                        <i class="bi bi-person-circle me-1 me-md-2"></i>
+                                        <span class="d-none d-sm-inline"><%= currentUser ? currentUser.username : '사용자' %></span>
+>>>>>>> 0e776da (변경사항 반영)
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li><a class="dropdown-item" href="/profile">
@@ -246,9 +277,15 @@
                                     </ul>
                                 </div>
                                 <% } else { %>
+<<<<<<< HEAD
                                 <a href="/login" class="btn btn-primary btn-sm d-flex align-items-center" style="border-radius: 20px; padding: 8px 16px;">
                                     <i class="bi bi-box-arrow-in-right me-2"></i>
                                     로그인
+=======
+                                <a href="/login" class="btn btn-primary btn-sm d-flex align-items-center" style="border-radius: 20px; padding: 6px 12px; font-size: 0.875rem;">
+                                    <i class="bi bi-box-arrow-in-right me-1 me-md-2"></i>
+                                    <span class="d-none d-sm-inline">로그인</span>
+>>>>>>> 0e776da (변경사항 반영)
                                 </a>
                                 <% } %>
                             </div>
@@ -256,6 +293,7 @@
                     </div>
                 </div>
 
+<<<<<<< HEAD
                 <!-- Header -->
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body text-center py-4">
@@ -343,6 +381,119 @@
                                 </div>
                                 <% } %>
                             </form>
+=======
+                <!-- Board Meta Section (shown only when board exists) -->
+                <% if (board) { %>
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <form id="board-meta-form" action="/boards/<%= boardId %>/meta" method="POST">
+                            <div class="row justify-content-center g-2 m-1">
+                                <!-- Row 1: 상태, 타입, 주소 -->
+                                <div class="col-md-4 col-lg-3">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">상태</span>
+                                        <select class="form-select board-meta-input" name="siteStatus" disabled>
+                                            <% const statuses = ['정상','숨김','공사 중','예정','중단','보류']; %>
+                                            <% statuses.forEach(function(s){ %>
+                                                <option value="<%= s %>" <%= (board && board.siteStatus === s) ? 'selected' : '' %>><%= s %></option>
+                                            <% }) %>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-lg-3">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">타입</span>
+                                        <input type="text" class="form-control board-meta-input" name="siteType" value="<%= board && board.siteType ? board.siteType : '' %>" placeholder="예: 공장, 아파트, 도로" disabled>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-lg-3">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                        <input type="text" class="form-control board-meta-input" name="address" value="<%= board && board.address ? board.address : '' %>" placeholder="주소" disabled>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Optional fields group - shown only in edit mode -->
+                            <div class="row justify-content-center g-2 m-1" id="optional-fields-container" style="display: none;">
+                                <div class="col-md-4 col-lg-3">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">위도</span>
+                                        <input type="number" step="any" class="form-control board-meta-input conditional-field" name="latitude" value="<%= board && typeof board.latitude === 'number' ? board.latitude : '' %>" placeholder="위도" disabled>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-lg-3">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">경도</span>
+                                        <input type="number" step="any" class="form-control board-meta-input conditional-field" name="longitude" value="<%= board && typeof board.longitude === 'number' ? board.longitude : '' %>" placeholder="경도" disabled>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 col-lg-3">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">태그</span>
+                                        <input type="text" class="form-control board-meta-input conditional-field" name="tags" value="<%= (board && Array.isArray(board.tags)) ? board.tags.join(', ') : '' %>" placeholder="예: 태그1, 태그2" disabled>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Row 3: 메모 -->
+                            <div class="row justify-content-center g-2 m-1">
+                                <div class="col-md-10 col-lg-8">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">메모</span>
+                                        <textarea class="form-control board-meta-input" name="memo" rows="3" placeholder="메모를 입력하세요" disabled><%= board && board.memo ? board.memo : '' %></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <% if (userId && (isAdmin || (board && board.authorId && String(board.authorId) === String(userId)))) { %>
+                            <div class="col-12 d-flex justify-content-center gap-2 mt-2 flex-wrap">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="toggle-board-meta-edit">
+                                    <i class="bi bi-sliders"></i> 수정
+                                </button>
+                                <button type="submit" class="btn btn-gradient btn-sm d-none" id="board-meta-save"><i class="bi bi-save"></i> 저장</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm d-none" id="board-meta-cancel">취소</button>
+                                <button type="submit"
+                                        class="btn btn-outline-danger btn-sm"
+                                        formaction="/boards/<%= boardId %>/delete"
+                                        formmethod="POST"
+                                        formnovalidate
+                                        onclick="return confirm('이 보드를 삭제하시겠습니까? 관련 게시글과 댓글도 모두 삭제됩니다.');">
+                                    <i class="bi bi-trash"></i> 삭제
+                                </button>
+                            </div>
+                            <% } %>
+                        </form>
+                    </div>
+                </div>
+                <% } %>
+
+                <!-- Search and Filter Section -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row g-3 align-items-end">
+                            <!-- Search Form -->
+                            <div class="col-md-8">
+                                <form method="GET" action="/boards/<%= boardId %>/posts" class="d-flex gap-2">
+                                    <div class="flex-grow-1">
+                                        <label for="searchInput" class="form-label visually-hidden">검색</label>
+                                        <input type="text"
+                                                class="form-control"
+                                                id="searchInput"
+                                                name="search"
+                                                placeholder="제목 또는 내용으로 검색..."
+                                                value="<%= search || '' %>">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-search"></i> 검색
+                                    </button>
+                                    <% if (search) { %>
+                                    <a href="/boards/<%= boardId %>/posts" class="btn btn-outline-secondary">
+                                        <i class="bi bi-x"></i> 초기화
+                                    </a>
+                                    <% } %>
+                                </form>
+                            </div>
+>>>>>>> 0e776da (변경사항 반영)
                         </div>
                     </div>
                 </div>
@@ -364,7 +515,11 @@
                         </div>
                         <% } %>
                         <% if (userId) { %>
+<<<<<<< HEAD
                         <form id="quick-post-form" action="/boards/<%= boardId %>/posts" method="POST" enctype="multipart/form-data" class="row g-2">
+=======
+                        <form id="quick-post-form" action="/boards/<%= boardId %>/posts/quick" method="POST" enctype="multipart/form-data" class="row g-2">
+>>>>>>> 0e776da (변경사항 반영)
                             <div class="col-12 col-md-6">
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text">제목</span>
@@ -495,6 +650,7 @@
                             <% if (userId && (isAdmin || (post.authorId && String(post.authorId._id) == String(userId)))) { %>
                                 <div class="d-flex gap-2">
                                     <a href="/posts/<%= post._id %>/comments" class="btn btn-outline-primary btn-sm">
+<<<<<<< HEAD
                                         <i class="bi bi-chat-dots"></i> 상세보기
                                     </a>
                                     <a href="/boards/posts/edit?boardId=<%= boardId %>&postId=<%= post._id %>" class="btn btn-outline-secondary btn-sm">
@@ -503,6 +659,19 @@
                                     <form action="/boards/posts/delete?boardId=<%= boardId %>&postId=<%= post._id %>" method="POST" onsubmit="return confirm('Delete this post? Comments will also be removed.');">
                                         <button type="submit" class="btn btn-outline-danger btn-sm">
                                             <i class="bi bi-trash"></i> 삭제
+=======
+                                        <i class="bi bi-chat-dots"></i>
+                                        <span class="d-none d-sm-inline"> 상세보기</span>
+                                    </a>
+                                    <a href="/boards/posts/edit?boardId=<%= boardId %>&postId=<%= post._id %>" class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-pencil"></i>
+                                        <span class="d-none d-sm-inline"> 수정</span>
+                                    </a>
+                                    <form action="/boards/posts/delete?boardId=<%= boardId %>&postId=<%= post._id %>" method="POST" onsubmit="return confirm('Delete this post? Comments will also be removed.');" class="d-inline">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <i class="bi bi-trash"></i>
+                                            <span class="d-none d-sm-inline"> 삭제</span>
+>>>>>>> 0e776da (변경사항 반영)
                                         </button>
                                     </form>
                                 </div>
@@ -562,7 +731,12 @@
                         <div class="card-footer bg-light border-top-0">
                             <div class="d-flex justify-content-between align-items-center">
                                 <button type="button" class="btn btn-success btn-sm add-comment-btn" onclick="showCommentForm('<%= post._id %>')">
+<<<<<<< HEAD
                                     <i class="bi bi-plus-circle"></i> 댓글 남기기
+=======
+                                    <i class="bi bi-plus-circle"></i>
+                                    <span class="d-none d-sm-inline"> 댓글 남기기</span>
+>>>>>>> 0e776da (변경사항 반영)
                                 </button>
                                 <small class="text-muted">
                                     <i class="bi bi-clock"></i> <%= new Date(post.createdAt).toLocaleString() %>
@@ -588,10 +762,73 @@
                 </div>
                 <% } %>
 
+<<<<<<< HEAD
 
             </div>
         </div>
     </div>
+=======
+                <!-- Pagination -->
+                <% if (totalPages > 1) { %>
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+
+                            <!-- Pagination Controls -->
+                            <div class="col-md-12 text-center">
+                                <nav aria-label="포스트 페이지네이션">
+                                    <ul class="pagination pagination-sm justify-content-center mb-0">
+                                        <!-- Previous -->
+                                        <% if (hasPrevPage) { %>
+                                        <li class="page-item">
+                                            <a class="page-link" href="/boards/<%= boardId %>/posts?page=<%= prevPage %><%= search ? '&search=' + encodeURIComponent(search) : '' %>">
+                                                <i class="bi bi-chevron-left"></i>
+                                            </a>
+                                        </li>
+                                        <% } else { %>
+                                        <li class="page-item disabled">
+                                            <span class="page-link">
+                                                <i class="bi bi-chevron-left"></i>
+                                            </span>
+                                        </li>
+                                        <% } %>
+
+                                        <!-- Page Numbers -->
+                                        <% const startPage = Math.max(1, currentPage - 2); %>
+                                        <% const endPage = Math.min(totalPages, currentPage + 2); %>
+
+                                        <% for (let i = startPage; i <= endPage; i++) { %>
+                                        <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                            <% if (i === currentPage) { %>
+                                            <span class="page-link"><%= i %></span>
+                                            <% } else { %>
+                                            <a class="page-link" href="/boards/<%= boardId %>/posts?page=<%= i %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"><%= i %></a>
+                                            <% } %>
+                                        </li>
+                                        <% } %>
+
+                                        <!-- Next -->
+                                        <% if (hasNextPage) { %>
+                                        <li class="page-item">
+                                            <a class="page-link" href="/boards/<%= boardId %>/posts?page=<%= nextPage %><%= search ? '&search=' + encodeURIComponent(search) : '' %>">
+                                                <i class="bi bi-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                        <% } else { %>
+                                        <li class="page-item disabled">
+                                            <span class="page-link">
+                                                <i class="bi bi-chevron-right"></i>
+                                            </span>
+                                        </li>
+                                        <% } %>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
+>>>>>>> 0e776da (변경사항 반영)
 
     <!-- Image Preview Modal -->
     <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
@@ -739,6 +976,7 @@
             }
         }
 
+<<<<<<< HEAD
         function submitComment(event, postId) {
             const textarea = document.getElementById('comment-content-' + postId);
             const content = textarea.value.trim();
@@ -755,6 +993,13 @@
             submitBtn.disabled = true;
 
             return true;
+=======
+        function changePerPage(limit) {
+            const url = new URL(window.location);
+            url.searchParams.set('limit', limit);
+            url.searchParams.set('page', '1'); // Reset to first page
+            window.location.href = url.toString();
+>>>>>>> 0e776da (변경사항 반영)
         }
 
         // Auto-hide comment forms when clicking outside
@@ -780,6 +1025,30 @@
                     }
                 });
             });
+<<<<<<< HEAD
+=======
+
+            // 포스트 생성 성공 알림
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('created') === 'true') {
+
+                // 폼 초기화
+                const quickForm = document.getElementById('quick-post-form');
+                if (quickForm) {
+                    quickForm.reset();
+                }
+
+                // 폼 숨기기
+                const quickCard = document.getElementById('quick-post-card');
+                if (quickCard) {
+                    quickCard.style.display = 'none';
+                }
+
+                // URL에서 created 파라미터 제거
+                const newUrl = window.location.pathname + window.location.hash;
+                window.history.replaceState({}, document.title, newUrl);
+            }
+>>>>>>> 0e776da (변경사항 반영)
         });
     </script>
 

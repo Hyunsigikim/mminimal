@@ -2,8 +2,34 @@ const Board = require('../models/Board');
 const User = require('../models/User');
 
 exports.getBoards = async (req, res) => {
+<<<<<<< HEAD
   const boards = await Board.find();
   res.render('boards', { boards });
+=======
+  try {
+    const boards = await Board.find();
+
+    // Get current user's location if logged in
+    let currentUserLocation = null;
+    if (req.session?.userId) {
+      const user = await User.findById(req.session.userId).select('latitude longitude');
+      if (user && user.latitude !== null && user.longitude !== null) {
+        currentUserLocation = {
+          latitude: user.latitude,
+          longitude: user.longitude
+        };
+      }
+    }
+
+    res.render('boards', {
+      boards,
+      currentUserLocation
+    });
+  } catch (err) {
+    console.error('Error fetching boards:', err);
+    res.status(500).send('Error fetching boards');
+  }
+>>>>>>> 0e776da (변경사항 반영)
 };
 
 // Delete a board (author or admin), along with its posts and comments

@@ -6,6 +6,11 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   position: { type: String, default: 'Member' }, // 직급
   address: { type: String, default: '' }, // 주소
+<<<<<<< HEAD
+=======
+  latitude: { type: Number, default: null }, // 위도
+  longitude: { type: Number, default: null }, // 경도
+>>>>>>> 0e776da (변경사항 반영)
   permissionLevel: { type: String, enum: ['Admin', 'Moderator', 'Member'], default: 'Member' }, // 권한등급
   createdAt: { type: Date, default: Date.now }
 });

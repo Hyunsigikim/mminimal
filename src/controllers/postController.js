@@ -16,6 +16,7 @@ exports.getPosts = async (req, res) => {
   try {
     const boardId = getBoardId(req);
     console.log('getPosts called for boardId:', boardId);
+<<<<<<< HEAD
     // Fetch board info for header/empty state context
     const board = await Board.findById(boardId).lean();
     const posts = await Post.find({ boardId })
@@ -30,6 +31,49 @@ exports.getPosts = async (req, res) => {
         authorId: post.authorId,
         authorUsername: post.authorId ? post.authorId.username : 'No authorId'
       });
+=======
+
+    // 쿼리 파라미터 추출
+    const page = parseInt(req.query.page) || 1;
+    const limit = 8; // 무조건 8개로 고정
+    const search = req.query.search || '';
+    const skip = (page - 1) * limit;
+
+    // 검색 조건 설정
+    let searchQuery = { boardId };
+    if (search) {
+      searchQuery.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { content: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Fetch board info for header/empty state context
+    const board = await Board.findById(boardId).lean();
+
+    // 포스트 조회 (페이지네이션 적용)
+    const posts = await Post.find(searchQuery)
+      .populate('authorId', 'username')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    console.log('Found posts:', posts.length, 'for page:', page, 'with limit:', limit, 'skip:', skip);
+    console.log('Search query:', JSON.stringify(searchQuery));
+    console.log('Total posts in DB for this board:', await Post.countDocuments({ boardId }));
+
+    // 전체 포스트 수 조회 (페이지네이션 정보용)
+    const totalPosts = await Post.countDocuments({ boardId });
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    console.log('Pagination debug:', {
+      totalPosts,
+      limit,
+      totalPages,
+      currentPage: page,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1
+>>>>>>> 0e776da (변경사항 반영)
     });
 
     const postsWithComments = await Promise.all(
@@ -57,14 +101,38 @@ exports.getPosts = async (req, res) => {
       isAdmin = me && me.permissionLevel === 'Admin';
     }
 
+<<<<<<< HEAD
     console.log('Rendering posts template with data');
     res.render('posts', { posts: postsWithComments, boardId, board, userId: currentUserId, isAdmin, currentUser });
+=======
+    console.log('Rendering posts template with pagination data');
+    res.render('posts', {
+      posts: postsWithComments,
+      boardId,
+      board,
+      userId: currentUserId,
+      isAdmin,
+      currentUser,
+      // 페이지네이션 정보
+      currentPage: page,
+      totalPages: totalPages,
+      totalPosts: totalPosts,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+      nextPage: page + 1,
+      prevPage: page - 1,
+      // 검색 정보
+      search: search,
+      limit: limit
+    });
+>>>>>>> 0e776da (변경사항 반영)
   } catch (err) {
     console.error('Error fetching posts:', err);
     res.status(500).send('Error fetching posts: ' + err.message);
   }
 };
 
+<<<<<<< HEAD
 // 새 글 작성 페이지 (TinyMCE 에디터)
 exports.showNewPost = async (req, res) => {
   try {
@@ -79,6 +147,8 @@ exports.showNewPost = async (req, res) => {
   }
 };
 
+=======
+>>>>>>> 0e776da (변경사항 반영)
 // 게시글 생성 처리
 exports.createPost = async (req, res) => {
   try {
@@ -125,6 +195,70 @@ exports.createPost = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
+=======
+// 새 글 작성 페이지 (TinyMCE 에디터)
+exports.showNewPost = async (req, res) => {
+  try {
+    if (!req.session.userId) {
+      return res.redirect('/login');
+    }
+    const boardId = getBoardId(req);
+    return res.render('post_new', { boardId });
+  } catch (err) {
+    console.error('Error showing new post editor:', err);
+    return res.status(500).send('Error showing editor');
+  }
+};
+
+// 빠른 게시글 생성 (board 페이지 유지)
+exports.quickCreatePost = async (req, res) => {
+  try {
+    const boardId = getBoardId(req);
+    const { title } = req.body;
+    let { content } = req.body;
+
+    // Support multiple files via multer.fields: req.files is an object map
+    let images = [];
+    if (req.files && typeof req.files === 'object') {
+      if (Array.isArray(req.files.images)) {
+        images = req.files.images.map(f => `/uploads/${f.filename}`);
+      }
+      // Legacy single field `'image'` may also be present via fields()
+      if (!images.length && Array.isArray(req.files.image) && req.files.image.length > 0) {
+        images = req.files.image.map(f => `/uploads/${f.filename}`);
+      }
+    }
+    // Backward compatibility: single file via req.file (when using upload.single)
+    const imageUrl = (!images.length && req.file) ? `/uploads/${req.file.filename}` : null;
+
+    if (!req.session.userId) {
+      return res.status(401).send('User not logged in');
+    }
+
+    const user = await User.findById(req.session.userId).select('username');
+    if (!user) return res.status(404).send('User not found');
+
+    const post = new Post({
+      title,
+      content,
+      boardId,
+      authorId: req.session.userId,
+      imageUrl,
+      images
+    });
+
+    await post.save();
+
+    // 빠른 생성의 경우 board 페이지로 리다이렉션 (쿼리 파라미터로 성공 표시)
+    return res.redirect(`/boards/${boardId}/posts?created=true`);
+  } catch (err) {
+    console.error('Error creating quick post:', err);
+    return res.status(400).send('Error creating post: ' + err.message);
+  }
+};
+
+>>>>>>> 0e776da (변경사항 반영)
 // 게시글 수정 페이지 (create와 동일한 에디터 재사용)
 exports.showEditPost = async (req, res) => {
   try {

@@ -64,26 +64,44 @@
                 <!-- Header -->
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body text-center py-4">
+<<<<<<< HEAD
                         <h1 class="card-title mb-2">🗺️ Forum Boards</h1>
                         <p class="text-muted mb-0">Interactive map with location-based boards</p>
+=======
+                        <h1 class="card-title mb-2">현장관리</h1>
+                        <p class="text-muted mb-0">위치 기반의 현장</p>
+>>>>>>> 0e776da (변경사항 반영)
                     </div>
                 </div>
 
                 <!-- Map Section -->
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-bottom-0 d-flex justify-content-between align-items-center">
+<<<<<<< HEAD
                         <h5 class="mb-0"><i class="bi bi-map"></i> Interactive Map</h5>
+=======
+                        <h5 class="mb-0"><i class="bi bi-map"></i> 지도</h5>
+>>>>>>> 0e776da (변경사항 반영)
                         <button id="toggle-hidden-btn" type="button" class="btn btn-outline-secondary btn-sm">
                             <i class="bi bi-eye-slash"></i> 숨김 보드 보기: OFF
                         </button>
                     </div>
                     <div class="card-body p-0">
+<<<<<<< HEAD
                         <div id="map" class="map-container"></div>
                     </div>
                     <div class="card-footer bg-light">
                         <small class="text-muted">
                             <i class="bi bi-info-circle"></i> Click anywhere on the map to set a location for a new board!<br>
                             <i class="bi bi-mouse2"></i> Double-click board markers to visit them!
+=======
+                        <div id="map" class="map-container" data-user-lat="<%= currentUserLocation ? currentUserLocation.latitude : '' %>" data-user-lng="<%= currentUserLocation ? currentUserLocation.longitude : '' %>"></div>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i> 지도를 클릭하여 현장 위치를 설정할 수 있습니다!<br>
+                            <i class="bi bi-mouse2"></i> 현장 마커를 더블클릭하여 현장으로 이동할 수 있습니다!
+>>>>>>> 0e776da (변경사항 반영)
                         </small>
                     </div>
                 </div>
@@ -104,7 +122,11 @@
                                         <% if (board.latitude && board.longitude && board.latitude !== 0 && board.longitude !== 0) { %>
                                             <%= board.latitude %>, <%= board.longitude %>
                                         <% } else { %>
+<<<<<<< HEAD
                                             Location not set
+=======
+                                            위치 정보가 없습니다.
+>>>>>>> 0e776da (변경사항 반영)
                                         <% } %>
                                     </div>
                                 </a>
@@ -119,8 +141,13 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-body text-center py-5">
                         <i class="bi bi-pin-map display-1 text-muted mb-3"></i>
+<<<<<<< HEAD
                         <h5 class="text-muted">No boards yet</h5>
                         <p class="text-muted mb-0">Create the first board to get started!</p>
+=======
+                        <h5 class="text-muted">현장이 없습니다.</h5>
+                        <p class="text-muted mb-0">현장 생성을 시작해주세요!</p>
+>>>>>>> 0e776da (변경사항 반영)
                     </div>
                 </div>
                 <% } %>
@@ -128,7 +155,11 @@
                 <!-- Create Board Section (Toggle) -->
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white border-bottom-0 d-flex justify-content-between align-items-center">
+<<<<<<< HEAD
                         <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Create New Board</h5>
+=======
+                        <h5 class="mb-0"><i class="bi bi-plus-circle"></i> 현장 생성</h5>
+>>>>>>> 0e776da (변경사항 반영)
                         <button id="toggle-create-board" type="button" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-chevron-down"></i> 폼 열기
                         </button>
@@ -137,6 +168,7 @@
                         <form action="/boards" method="POST">
                             <div class="row g-3">
                                 <div class="col-md-6">
+<<<<<<< HEAD
                                     <label class="form-label">Board Name</label>
                                     <input type="text" class="form-control" name="name" placeholder="Enter board name" required>
                                 </div>
@@ -162,6 +194,33 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Site Status</label>
+=======
+                                    <label class="form-label">현장 제목</label>
+                                    <input type="text" class="form-control" name="name" placeholder="Enter board name" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">설명</label>
+                                    <input type="text" class="form-control" name="description" placeholder="Enter description (optional)">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">위도</label>
+                                    <input type="number" class="form-control" name="latitude" placeholder="Click on map" step="any" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">경도</label>
+                                    <input type="number" class="form-control" name="longitude" placeholder="Click on map" step="any" required>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">주소</label>
+                                    <input type="text" class="form-control" name="address" placeholder="Enter address (optional)">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">현장 유형</label>
+                                    <input type="text" class="form-control" name="siteType" placeholder="e.g., 공장, 아파트, 도로 등">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">현장 상태</label>
+>>>>>>> 0e776da (변경사항 반영)
                                     <select class="form-select" name="siteStatus">
                                         <option value="정상" selected>정상</option>
                                         <option value="숨김">숨김</option>
@@ -182,7 +241,11 @@
                             </div>
                             <div class="mt-3">
                                 <button type="submit" class="btn btn-gradient w-100">
+<<<<<<< HEAD
                                     <i class="bi bi-check-circle"></i> Create Board
+=======
+                                    <i class="bi bi-check-circle"></i> 게시판 생성
+>>>>>>> 0e776da (변경사항 반영)
                                 </button>
                             </div>
                         </form>
@@ -193,6 +256,7 @@
                 <div class="card border-0 shadow-sm mt-4">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+<<<<<<< HEAD
                             <span class="text-muted">Welcome! Choose a board to start discussing</span>
                             <div class="d-flex gap-2">
                                 <a href="/profile" class="btn btn-outline-info btn-sm">
@@ -200,6 +264,15 @@
                                 </a>
                                 <a href="/logout" class="btn btn-outline-danger btn-sm">
                                     <i class="bi bi-box-arrow-right"></i> Logout
+=======
+                            <span class="text-muted">현장 관리 프로그램 0.01</span>
+                            <div class="d-flex gap-2">
+                                <a href="/profile" class="btn btn-outline-info btn-sm">
+                                    <i class="bi bi-person-circle"></i> 프로필
+                                </a>
+                                <a href="/logout" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-box-arrow-right"></i> 로그아웃
+>>>>>>> 0e776da (변경사항 반영)
                                 </a>
                             </div>
                         </div>
@@ -218,7 +291,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+<<<<<<< HEAD
         // Initialize map
+=======
+        // Initialize map with user's location
+>>>>>>> 0e776da (변경사항 반영)
         const map = L.map('map').setView([37.5665, 126.9780], 10);
 
         // Add tiles
@@ -226,6 +303,7 @@
             maxZoom: 18
         }).addTo(map);
 
+<<<<<<< HEAD
         // Click handler for map
         let currentMarker = null;
         map.on('click', function(e) {
@@ -240,6 +318,82 @@
 
             document.querySelector('input[name="latitude"]').value = lat.toFixed(6);
             document.querySelector('input[name="longitude"]').value = lng.toFixed(6);
+=======
+        // Store user's preferred location
+        let userPreferredLocation = null;
+
+        // Function to set map view to a specific location
+        function setMapToLocation(lat, lng, zoom = 15) {
+            map.setView([lat, lng], zoom);
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+            currentMarker = L.marker([lat, lng]).addTo(map);
+        }
+
+        // Request user's current GPS location
+        function requestUserLocation() {
+            if (!navigator.geolocation) {
+                console.log('Geolocation is not supported by this browser');
+                useUserAccountLocation();
+                return;
+            }
+
+            console.log('Requesting GPS location...');
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    console.log('GPS location obtained:', lat, lng);
+
+                    // Set map to user's current location
+                    setMapToLocation(lat, lng, 16);
+                    userPreferredLocation = { lat, lng };
+
+                    // Update form fields if creating a new board
+                    const latField = document.querySelector('input[name="latitude"]');
+                    const lngField = document.querySelector('input[name="longitude"]');
+                    if (latField && lngField) {
+                        latField.value = lat.toFixed(6);
+                        lngField.value = lng.toFixed(6);
+                    }
+                },
+                function(error) {
+                    console.log('GPS location denied or error:', error.code, error.message);
+                    useUserAccountLocation();
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000 // 5 minutes
+                }
+            );
+        }
+
+        // Use user's account location as fallback
+        function useUserAccountLocation() {
+            const mapElement = document.getElementById('map');
+            const userLat = mapElement.dataset.userLat;
+            const userLng = mapElement.dataset.userLng;
+
+            if (userLat && userLng && userLat !== '' && userLng !== '') {
+                const lat = parseFloat(userLat);
+                const lng = parseFloat(userLng);
+                console.log('Using user account location:', lat, lng);
+                setMapToLocation(lat, lng, 15);
+                userPreferredLocation = { lat, lng };
+            } else {
+                console.log('No user location available, using default Seoul location');
+            }
+        }
+
+        // Initialize location on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Small delay to ensure map is ready
+            setTimeout(function() {
+                requestUserLocation();
+            }, 100);
+>>>>>>> 0e776da (변경사항 반영)
         });
 
         // Add board markers (by status)

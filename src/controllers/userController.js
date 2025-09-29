@@ -29,13 +29,23 @@ exports.login = async (req, res) => {
       res.status(401).send('Invalid credentials');
     }
   } catch (err) {
+<<<<<<< HEAD
+=======
+    console.error('Login error:', err);
+>>>>>>> 0e776da (변경사항 반영)
     res.status(400).send('Error logging in');
   }
 };
 
+<<<<<<< HEAD
 exports.register = async (req, res, next) => {
   try {
     const { username, email, password, confirmPassword, position, address, permissionLevel } = req.body;
+=======
+exports.register = async (req, res) => {
+  try {
+    const { username, email, password, confirmPassword, position, address, latitude, longitude, permissionLevel } = req.body;
+>>>>>>> 0e776da (변경사항 반영)
 
     // Validate required fields
     if (!username || !email || !password || !confirmPassword) {
@@ -67,6 +77,13 @@ exports.register = async (req, res, next) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+<<<<<<< HEAD
+=======
+    // Parse coordinates
+    const lat = latitude ? parseFloat(latitude) : null;
+    const lng = longitude ? parseFloat(longitude) : null;
+
+>>>>>>> 0e776da (변경사항 반영)
     // Create user with all fields
     const user = new User({
       username,
@@ -74,11 +91,20 @@ exports.register = async (req, res, next) => {
       password: hashedPassword,
       position: position || 'Member',
       address: address || '',
+<<<<<<< HEAD
+=======
+      latitude: lat,
+      longitude: lng,
+>>>>>>> 0e776da (변경사항 반영)
       permissionLevel: permissionLevel || 'Member'
     });
 
     await user.save();
+<<<<<<< HEAD
     console.log('User registered successfully:', username);
+=======
+    console.log('User registered successfully:', username, 'with coordinates:', lat, lng);
+>>>>>>> 0e776da (변경사항 반영)
 
     res.redirect('/login?message=Registration successful! Please login.');
   } catch (err) {
@@ -102,7 +128,11 @@ exports.showProfile = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
+<<<<<<< HEAD
     const { username, email, position, address, permissionLevel } = req.body;
+=======
+    const { username, email, position, address, latitude, longitude, permissionLevel } = req.body;
+>>>>>>> 0e776da (변경사항 반영)
     const user = await User.findById(req.session.userId);
 
     if (!user) {
@@ -125,15 +155,31 @@ exports.updateProfile = async (req, res) => {
       }
     }
 
+<<<<<<< HEAD
+=======
+    // Parse coordinates
+    const lat = latitude ? parseFloat(latitude) : null;
+    const lng = longitude ? parseFloat(longitude) : null;
+
+>>>>>>> 0e776da (변경사항 반영)
     // Update all fields
     user.username = username;
     user.email = email;
     user.position = position || user.position;
     user.address = address || user.address;
+<<<<<<< HEAD
     user.permissionLevel = permissionLevel || user.permissionLevel;
 
     await user.save();
     console.log('Profile updated successfully for user:', username);
+=======
+    user.latitude = lat;
+    user.longitude = lng;
+    user.permissionLevel = permissionLevel || user.permissionLevel;
+
+    await user.save();
+    console.log('Profile updated successfully for user:', username, 'with coordinates:', lat, lng);
+>>>>>>> 0e776da (변경사항 반영)
 
     res.redirect('/profile?message=Profile updated successfully!');
   } catch (err) {
@@ -164,10 +210,17 @@ exports.fixUsernames = async (req, res) => {
       await user.save();
       fixedCount++;
     }
+<<<<<<< HEAD
 
     res.json({ message: `Fixed ${fixedCount} users with missing usernames` });
   } catch (err) {
     console.error('Error fixing usernames:', err);
     res.status(500).json({ error: 'Error fixing usernames' });
+=======
+    res.json({ message: `Fixed ${fixedCount} users with missing usernames` });
+  } catch (err) {
+    console.error('Error fixing usernames:', err);
+    res.status(500).json({ error: 'Error fixing usernames', message: err.message });
+>>>>>>> 0e776da (변경사항 반영)
   }
 };
