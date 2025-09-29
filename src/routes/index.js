@@ -42,8 +42,6 @@ router.post(
   postController.createPost
 );
 
-<<<<<<< HEAD
-=======
 // 빠른 게시글 생성 (board 페이지 유지용)
 router.post(
   '/boards/:boardId/posts/quick',
@@ -54,7 +52,6 @@ router.post(
   postController.quickCreatePost
 );
 
->>>>>>> 0e776da (변경사항 반영)
 router.get('/boards/posts/edit', postController.showEditPost); // 쿼리스트링 방식
 router.post('/boards/posts/edit',
   upload.fields([

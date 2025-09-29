@@ -16,22 +16,6 @@ exports.getPosts = async (req, res) => {
   try {
     const boardId = getBoardId(req);
     console.log('getPosts called for boardId:', boardId);
-<<<<<<< HEAD
-    // Fetch board info for header/empty state context
-    const board = await Board.findById(boardId).lean();
-    const posts = await Post.find({ boardId })
-      .populate('authorId', 'username')
-      .sort({ createdAt: -1 });
-
-    console.log('Found posts:', posts.length);
-    posts.forEach((post, index) => {
-      console.log(`Post ${index + 1}:`, {
-        id: post._id,
-        title: post.title,
-        authorId: post.authorId,
-        authorUsername: post.authorId ? post.authorId.username : 'No authorId'
-      });
-=======
 
     // 쿼리 파라미터 추출
     const page = parseInt(req.query.page) || 1;
@@ -73,7 +57,6 @@ exports.getPosts = async (req, res) => {
       currentPage: page,
       hasNextPage: page < totalPages,
       hasPrevPage: page > 1
->>>>>>> 0e776da (변경사항 반영)
     });
 
     const postsWithComments = await Promise.all(
@@ -101,10 +84,6 @@ exports.getPosts = async (req, res) => {
       isAdmin = me && me.permissionLevel === 'Admin';
     }
 
-<<<<<<< HEAD
-    console.log('Rendering posts template with data');
-    res.render('posts', { posts: postsWithComments, boardId, board, userId: currentUserId, isAdmin, currentUser });
-=======
     console.log('Rendering posts template with pagination data');
     res.render('posts', {
       posts: postsWithComments,
@@ -125,30 +104,12 @@ exports.getPosts = async (req, res) => {
       search: search,
       limit: limit
     });
->>>>>>> 0e776da (변경사항 반영)
   } catch (err) {
     console.error('Error fetching posts:', err);
     res.status(500).send('Error fetching posts: ' + err.message);
   }
 };
 
-<<<<<<< HEAD
-// 새 글 작성 페이지 (TinyMCE 에디터)
-exports.showNewPost = async (req, res) => {
-  try {
-    if (!req.session.userId) {
-      return res.redirect('/login');
-    }
-    const boardId = getBoardId(req);
-    return res.render('post_new', { boardId });
-  } catch (err) {
-    console.error('Error showing new post editor:', err);
-    return res.status(500).send('Error showing editor');
-  }
-};
-
-=======
->>>>>>> 0e776da (변경사항 반영)
 // 게시글 생성 처리
 exports.createPost = async (req, res) => {
   try {
@@ -195,8 +156,6 @@ exports.createPost = async (req, res) => {
   }
 };
 
-<<<<<<< HEAD
-=======
 // 새 글 작성 페이지 (TinyMCE 에디터)
 exports.showNewPost = async (req, res) => {
   try {
@@ -258,7 +217,6 @@ exports.quickCreatePost = async (req, res) => {
   }
 };
 
->>>>>>> 0e776da (변경사항 반영)
 // 게시글 수정 페이지 (create와 동일한 에디터 재사용)
 exports.showEditPost = async (req, res) => {
   try {

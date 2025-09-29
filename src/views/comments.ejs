@@ -111,20 +111,6 @@
         }
     </style>
 </head>
-<<<<<<< HEAD
-    <div class="container-fluid py-4" style="padding-top: 80px !important;">
-        <div class="row justify-content-center">
-            <div class="col-lg-10 col-xl-8">
-                <!-- Top Navigation -->
-                <div class="card border-0 shadow-sm mb-4" style="position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 90%; max-width: 1200px; z-index: 1000; background: white;">
-                    <div class="card-body py-3">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                            <!-- Left: Back button -->
-                            <div class="d-flex align-items-center">
-                                <a href="/boards/<%= post ? post.boardId : '' %>/posts" class="btn btn-outline-secondary btn-sm d-flex align-items-center me-3" style="border-radius: 20px; padding: 8px 16px;">
-                                    <i class="bi bi-chevron-left me-2"></i>
-                                    뒤로가기
-=======
     <div class="container py-4" style="padding-top: 100px !important; max-width: 1400px;">
         <div class="row justify-content-center">
             <div class="col-12 col-lg-11 col-xl-10 col-xxl-9">
@@ -141,17 +127,12 @@
                                 <a href="/boards/<%= post ? post.boardId : '' %>/posts" class="btn btn-outline-secondary btn-sm d-flex align-items-center" style="border-radius: 20px; padding: 6px 12px; font-size: 0.875rem;">
                                     <i class="bi bi-chevron-left me-1 me-md-2"></i>
                                     <span class="d-none d-sm-inline">뒤로가기</span>
->>>>>>> 0e776da (변경사항 반영)
                                 </a>
                             </div>
 
                             <!-- Center: Page title -->
                             <div class="flex-grow-1 text-center">
-<<<<<<< HEAD
-                                <h1 class="card-title mb-0" style="font-size: 1.5rem; font-weight: 600;">
-=======
                                 <h1 class="card-title mb-0" style="font-size: 1.25rem; font-weight: 600; margin: 0;">
->>>>>>> 0e776da (변경사항 반영)
                                     <%= post ? post.title : '댓글' %>
                                 </h1>
                             </div>
@@ -162,15 +143,9 @@
                                 <div class="dropdown">
                                     <button class="btn btn-outline-primary btn-sm dropdown-toggle d-flex align-items-center"
                                             type="button" data-bs-toggle="dropdown" aria-expanded="false"
-<<<<<<< HEAD
-                                            style="border-radius: 20px; padding: 8px 16px;">
-                                        <i class="bi bi-person-circle me-2"></i>
-                                        <%= currentUser ? currentUser.username : '사용자' %>
-=======
                                             style="border-radius: 20px; padding: 6px 12px; font-size: 0.875rem;">
                                         <i class="bi bi-person-circle me-1 me-md-2"></i>
                                         <span class="d-none d-sm-inline"><%= currentUser ? currentUser.username : '사용자' %></span>
->>>>>>> 0e776da (변경사항 반영)
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li><a class="dropdown-item" href="/profile">
@@ -183,15 +158,9 @@
                                     </ul>
                                 </div>
                                 <% } else { %>
-<<<<<<< HEAD
-                                <a href="/login" class="btn btn-primary btn-sm d-flex align-items-center" style="border-radius: 20px; padding: 8px 16px;">
-                                    <i class="bi bi-box-arrow-in-right me-2"></i>
-                                    로그인
-=======
                                 <a href="/login" class="btn btn-primary btn-sm d-flex align-items-center" style="border-radius: 20px; padding: 6px 12px; font-size: 0.875rem;">
                                     <i class="bi bi-box-arrow-in-right me-1 me-md-2"></i>
                                     <span class="d-none d-sm-inline">로그인</span>
->>>>>>> 0e776da (변경사항 반영)
                                 </a>
                                 <% } %>
                             </div>

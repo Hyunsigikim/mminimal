@@ -2,10 +2,6 @@ const Board = require('../models/Board');
 const User = require('../models/User');
 
 exports.getBoards = async (req, res) => {
-<<<<<<< HEAD
-  const boards = await Board.find();
-  res.render('boards', { boards });
-=======
   try {
     const boards = await Board.find();
 
@@ -29,7 +25,6 @@ exports.getBoards = async (req, res) => {
     console.error('Error fetching boards:', err);
     res.status(500).send('Error fetching boards');
   }
->>>>>>> 0e776da (변경사항 반영)
 };
 
 // Delete a board (author or admin), along with its posts and comments
