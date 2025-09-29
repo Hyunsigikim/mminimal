@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create New Post</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/css/custom.css" rel="stylesheet">
+  <!-- TinyMCE -->
+  <script src="https://cdn.tiny.cloud/1/842r9kzv479q195q45mvsiekgpy2ga0dvfrvybnh6mix1kf8/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+  <style>
+    .editor-card { border: none; box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+    #editor-status { font-size: .9rem; }
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">
+        <i class="bi bi-pencil-square"></i>
+        <%= typeof post !== 'undefined' ? 'Edit Post' : 'New Post' %>
+      </h3>
+      <a href="/boards/<%= boardId %>/posts" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+
+    <div class="card editor-card">
+      <div class="card-body">
+        <div id="editor-status" class="text-muted mb-2"><i class="bi bi-info-circle"></i> Initializing editor...</div>
+        <form action="<%= typeof post !== 'undefined' ? ('/boards/posts/edit?boardId=' + boardId + '&postId=' + post._id) : ('/boards/' + boardId + '/posts') %>" method="POST" enctype="multipart/form-data" onsubmit="return handleFormSubmit(event)">
+          <div class="mb-3">
+            <label class="form-label">Title</label>
+            <input type="text" class="form-control" name="title" placeholder="Enter title" value="<%= typeof post !== 'undefined' ? post.title : '' %>" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Content</label>
+            <textarea id="editor" name="content"></textarea>
+          </div>
+
+          <% if (typeof post === 'undefined') { %>
+          <div class="mb-3">
+            <label class="form-label">Photos (optional)</label>
+            <input type="file" name="images" class="form-control" accept="image/*" multiple>
+            <div class="form-text">여러 장 업로드 가능합니다. (최대 20장)</div>
+          </div>
+          <% } %>
+
+          <% if (typeof post !== 'undefined') { %>
+          <!-- Existing Images Section -->
+          <% if (post.images && post.images.length > 0) { %>
+          <div class="mb-3">
+            <label class="form-label">Current Images</label>
+            <div class="row g-2 mb-2">
+              <% post.images.forEach((image, index) => { %>
+              <div class="col-md-3 col-sm-4 col-6">
+                <div class="card">
+                  <img src="<%= image %>" class="card-img-top" alt="Current image" style="height: 120px; object-fit: cover;">
+                  <div class="card-body p-2">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="deleteImages[]" value="<%= index %>" id="deleteImage<%= index %>">
+                      <label class="form-check-label small" for="deleteImage<%= index %>">
+                        Delete
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <% }); %>
+            </div>
+          </div>
+          <% } %>
+
+          <!-- Add New Images Section -->
+          <div class="mb-3">
+            <label class="form-label">Add New Photos (optional)</label>
+            <input type="file" name="images" class="form-control" accept="image/*" multiple>
+            <div class="form-text">추가로 업로드할 사진들을 선택하세요. (최대 20장)</div>
+          </div>
+          <% } %>
+
+          <div class="d-flex justify-content-end gap-2">
+            <a href="/boards/<%= boardId %>/posts" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-gradient">
+              <i class="bi bi-send"></i>
+              <%= typeof post !== 'undefined' ? 'Save Changes' : 'Publish' %>
+            </button>
+          </div>
+        </form>
+        <% if (typeof post !== 'undefined') { %>
+        <hr />
+        <form action="/boards/posts/delete?boardId=<%= boardId %>&postId=<%= post._id %>" method="POST" onsubmit="return confirm('Delete this post permanently? This will also remove its comments.');">
+          <button type="submit" class="btn btn-outline-danger"><i class="bi bi-trash"></i> Delete Post</button>
+        </form>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function handleFormSubmit(event) {
+      console.log('🚀 Form submit triggered');
+
+      // Get content from TinyMCE
+      const editor = tinymce.get('editor');
+      if (editor) {
+        const content = editor.getContent();
+        console.log('📝 TinyMCE content length:', content.length);
+        console.log('📝 Content preview:', content.substring(0, 50));
+
+        // Set the content to the hidden textarea
+        const contentField = document.querySelector('textarea[name="content"]');
+        if (contentField) {
+          contentField.value = content;
+          console.log('✅ Content set to textarea, length:', contentField.value.length);
+        } else {
+          console.error('❌ Content textarea not found!');
+          return false;
+        }
+      } else {
+        console.error('❌ TinyMCE editor not found!');
+        return false;
+      }
+
+      // Get title value
+      const titleField = document.querySelector('input[name="title"]');
+      if (titleField) {
+        console.log('📋 Title value:', titleField.value);
+      }
+
+      // Allow form to submit normally
+      return true;
+    }
+
+    function prepareFormSubmission() {
+      console.log('Preparing form submission...');
+
+      // Get content from TinyMCE
+      const editor = tinymce.get('editor');
+      if (editor) {
+        const content = editor.getContent();
+        console.log('TinyMCE content length:', content.length);
+
+        // Set the content to the hidden textarea
+        const contentField = document.querySelector('textarea[name="content"]');
+        if (contentField) {
+          contentField.value = content;
+          console.log('Content set to textarea');
+        } else {
+          console.error('Content textarea not found!');
+        }
+      } else {
+        console.error('TinyMCE editor not found!');
+      }
+
+      // Get title value
+      const titleField = document.querySelector('input[name="title"]');
+      if (titleField) {
+        console.log('Title value:', titleField.value);
+      }
+
+      // Continue with form submission
+      return true;
+    }
+
+    function initTinyMCE() {
+      if (!window.tinymce) {
+        document.getElementById('editor-status').innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Failed to load TinyMCE CDN. Check your network or use an API key.</span>';
+        return;
+      }
+      tinymce.init({
+        selector: '#editor',
+        height: 500,
+        menubar: true,
+        plugins: 'preview importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount help charmap quickbars emoticons',
+        toolbar: 'undo redo | bold italic underline strikethrough | fontfamily fontsize blocks | alignleft aligncenter alignright alignjustify | outdent indent | numlist bullist | forecolor backcolor removeformat | image media link codesample table | fullscreen preview',
+        toolbar_mode: 'sliding',
+        image_title: true,
+        automatic_uploads: true,
+        images_upload_url: '/editor/upload-image',
+        images_upload_credentials: true,
+        file_picker_types: 'image',
+        convert_urls: false,
+        content_style: 'body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; font-size: 16px; }',
+        mobile: {
+          menubar: false,
+          toolbar: 'undo redo | bold italic underline | bullist numlist | link image | removeformat'
+        },
+        setup: (editor) => {
+          editor.on('init', () => {
+            const el = document.getElementById('editor-status');
+            if (el) el.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> Editor ready</span>';
+            // Set initial content when editing
+            try {
+              const initial = document.getElementById('initial-content');
+              if (initial) {
+                editor.setContent(initial.innerHTML);
+              }
+            } catch (e) {}
+          });
+        }
+      });
+    }
+
+    // Initialize after DOM is ready (and give CDN a moment)
+    window.addEventListener('load', function() {
+      initTinyMCE();
+      // Fallback: retry once after 1s if tinymce still missing
+      setTimeout(function(){ if (!window.tinymce?.activeEditor) initTinyMCE(); }, 1000);
+    });
+  </script>
+  <% if (typeof post !== 'undefined') { %>
+  <!-- Hidden container to safely pass initial HTML content to TinyMCE -->
+  <div id="initial-content" style="display:none;"><%- post.content %></div>
+  <% } %>
+</body>
+</html>

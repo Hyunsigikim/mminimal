@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boards</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/css/custom.css" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+
+    <style>
+        /* Minimal custom styles for boards page */
+        .map-container {
+            height: 500px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .board-card {
+            transition: all 0.2s ease;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: 100%;
+        }
+
+        .board-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .board-link {
+            text-decoration: none;
+            color: inherit;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .board-link:hover {
+            color: inherit;
+        }
+
+        .board-location {
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-9">
+                <!-- Header -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body text-center py-4">
+                        <h1 class="card-title mb-2">🗺️ Forum Boards</h1>
+                        <p class="text-muted mb-0">Interactive map with location-based boards</p>
+                    </div>
+                </div>
+
+                <!-- Map Section -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom-0 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-map"></i> Interactive Map</h5>
+                        <button id="toggle-hidden-btn" type="button" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-eye-slash"></i> 숨김 보드 보기: OFF
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="map" class="map-container"></div>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i> Click anywhere on the map to set a location for a new board!<br>
+                            <i class="bi bi-mouse2"></i> Double-click board markers to visit them!
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Boards Grid -->
+                <div class="row g-3 mb-4">
+                    <% boards.forEach(board => { %>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card board-card h-100">
+                            <div class="card-body d-flex flex-column">
+                                <a href="/boards/<%= board._id %>/posts" class="board-link">
+                                    <h6 class="card-title text-dark mb-2"><%= board.name %></h6>
+                                    <p class="card-text text-muted small mb-3">
+                                        <%= board.description || 'No description available' %>
+                                    </p>
+                                    <div class="board-location mt-auto">
+                                        <i class="bi bi-geo-alt"></i>
+                                        <% if (board.latitude && board.longitude && board.latitude !== 0 && board.longitude !== 0) { %>
+                                            <%= board.latitude %>, <%= board.longitude %>
+                                        <% } else { %>
+                                            Location not set
+                                        <% } %>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <% }); %>
+                </div>
+
+                <% if (boards.length === 0) { %>
+                <!-- Empty State -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-pin-map display-1 text-muted mb-3"></i>
+                        <h5 class="text-muted">No boards yet</h5>
+                        <p class="text-muted mb-0">Create the first board to get started!</p>
+                    </div>
+                </div>
+                <% } %>
+
+                <!-- Create Board Section (Toggle) -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom-0 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Create New Board</h5>
+                        <button id="toggle-create-board" type="button" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-chevron-down"></i> 폼 열기
+                        </button>
+                    </div>
+                    <div id="create-board-body" class="card-body" style="display: none;">
+                        <form action="/boards" method="POST">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Board Name</label>
+                                    <input type="text" class="form-control" name="name" placeholder="Enter board name" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Description</label>
+                                    <input type="text" class="form-control" name="description" placeholder="Enter description (optional)">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Latitude</label>
+                                    <input type="number" class="form-control" name="latitude" placeholder="Click on map" step="any" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Longitude</label>
+                                    <input type="number" class="form-control" name="longitude" placeholder="Click on map" step="any" required>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Address</label>
+                                    <input type="text" class="form-control" name="address" placeholder="Enter address (optional)">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Site Type (Category)</label>
+                                    <input type="text" class="form-control" name="siteType" placeholder="e.g., 공장, 아파트, 도로 등">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Site Status</label>
+                                    <select class="form-select" name="siteStatus">
+                                        <option value="정상" selected>정상</option>
+                                        <option value="숨김">숨김</option>
+                                        <option value="공사 중">공사 중</option>
+                                        <option value="예정">예정</option>
+                                        <option value="중단">중단</option>
+                                        <option value="보류">보류</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Memo</label>
+                                    <textarea class="form-control" name="memo" rows="3" placeholder="Enter memo (optional)"></textarea>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Tags (comma-separated)</label>
+                                    <input type="text" class="form-control" name="tags" placeholder="예: 태그1, 태그2, 태그3">
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-gradient w-100">
+                                    <i class="bi bi-check-circle"></i> Create Board
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="card border-0 shadow-sm mt-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <span class="text-muted">Welcome! Choose a board to start discussing</span>
+                            <div class="d-flex gap-2">
+                                <a href="/profile" class="btn btn-outline-info btn-sm">
+                                    <i class="bi bi-person-circle"></i> Profile
+                                </a>
+                                <a href="/logout" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-box-arrow-right"></i> Logout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([37.5665, 126.9780], 10);
+
+        // Add tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18
+        }).addTo(map);
+
+        // Click handler for map
+        let currentMarker = null;
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+
+            currentMarker = L.marker([lat, lng]).addTo(map);
+
+            document.querySelector('input[name="latitude"]').value = lat.toFixed(6);
+            document.querySelector('input[name="longitude"]').value = lng.toFixed(6);
+        });
+
+        // Add board markers (by status)
+        const boardData = <%- JSON.stringify(boards) %>;
+        let showHidden = false;
+        const visibleLayers = [];
+        const hiddenLayers = [];
+
+        function makePopup(board) {
+            return (
+                '<strong>' + (board.name || 'Untitled') + '</strong>' +
+                '<br><a href="/boards/' + board._id + '/posts">View Posts</a>'
+            );
+        }
+
+        function addVisibleLayer(layer) {
+            layer.addTo(map);
+            visibleLayers.push(layer);
+        }
+
+        function buildMarkers() {
+            // Clear existing layers from map
+            visibleLayers.forEach(l => map.removeLayer(l));
+            visibleLayers.length = 0;
+            hiddenLayers.forEach(l => map.removeLayer(l));
+            hiddenLayers.length = 0;
+
+            boardData.forEach(function(board) {
+                const lat = board.latitude || 0;
+                const lng = board.longitude || 0;
+                const status = board.siteStatus || '정상';
+                const hasLocation = !(lat === 0 && lng === 0);
+                const coords = hasLocation ? [lat, lng] : [37.5665, 126.9780];
+
+                // Determine layer type by status
+                if (status === '숨김') {
+                    const hiddenMarker = L.marker(coords, { opacity: 0.6 }).bindPopup(makePopup(board));
+                    hiddenMarker.on('dblclick', function() {
+                        window.location.href = '/boards/' + board._id + '/posts';
+                    });
+                    // Only add if showHidden is true
+                    if (showHidden) {
+                        addVisibleLayer(hiddenMarker);
+                    }
+                    hiddenLayers.push(hiddenMarker);
+                } else if (status === '정상') {
+                    const marker = L.marker(coords).bindPopup(makePopup(board));
+                    // Show site name label above normal markers
+                    const label = board.name || 'Untitled';
+                    marker.bindTooltip(label, { permanent: true, direction: 'top', offset: [0, -10], opacity: 0.9 });
+                    marker.on('dblclick', function() {
+                        window.location.href = '/boards/' + board._id + '/posts';
+                    });
+                    addVisibleLayer(marker);
+                } else {
+                    // Other statuses -> gray circle marker
+                    const circle = L.circleMarker(coords, {
+                        radius: 8,
+                        color: '#6c757d',
+                        weight: 2,
+                        fillColor: '#6c757d',
+                        fillOpacity: 0.9
+                    }).bindPopup(makePopup(board));
+                    circle.on('dblclick', function() {
+                        window.location.href = '/boards/' + board._id + '/posts';
+                    });
+                    addVisibleLayer(circle);
+                }
+            });
+
+            fitToVisible();
+        }
+
+        function fitToVisible() {
+            const bounds = [];
+            visibleLayers.forEach(layer => {
+                if (layer.getLatLng) {
+                    const ll = layer.getLatLng();
+                    bounds.push([ll.lat, ll.lng]);
+                }
+            });
+            if (bounds.length > 0) {
+                map.fitBounds(bounds, { padding: [20, 20] });
+            }
+        }
+
+        // Initial marker build
+        buildMarkers();
+
+        // Toggle hidden boards
+        const toggleBtn = document.getElementById('toggle-hidden-btn');
+        toggleBtn.addEventListener('click', function() {
+            showHidden = !showHidden;
+            toggleBtn.innerHTML = showHidden
+                ? '<i class="bi bi-eye"></i> 숨김 보드 보기: ON'
+                : '<i class="bi bi-eye-slash"></i> 숨김 보드 보기: OFF';
+            buildMarkers();
+        });
+
+        // Toggle Create Board form
+        const createToggleBtn = document.getElementById('toggle-create-board');
+        const createBody = document.getElementById('create-board-body');
+        createToggleBtn.addEventListener('click', function() {
+            const isHidden = createBody.style.display === 'none';
+            createBody.style.display = isHidden ? 'block' : 'none';
+            createToggleBtn.innerHTML = isHidden
+                ? '<i class="bi bi-chevron-up"></i> 폼 닫기'
+                : '<i class="bi bi-chevron-down"></i> 폼 열기';
+        });
+
+        // Fit bounds handled in buildMarkers() based on currently visible layers
+    </script>
+</body>
+</html>
