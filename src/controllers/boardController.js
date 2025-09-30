@@ -1,6 +1,7 @@
 const Board = require('../models/Board');
 const User = require('../models/User');
 
+// Show all boards (list view with map)
 exports.getBoards = async (req, res) => {
   try {
     const boards = await Board.find();
@@ -24,6 +25,30 @@ exports.getBoards = async (req, res) => {
   } catch (err) {
     console.error('Error fetching boards:', err);
     res.status(500).send('Error fetching boards');
+  }
+};
+
+// Show new board creation page
+exports.showNewBoard = async (req, res) => {
+  try {
+    // Get current user's location if logged in
+    let currentUserLocation = null;
+    if (req.session?.userId) {
+      const user = await User.findById(req.session.userId).select('latitude longitude');
+      if (user && user.latitude !== null && user.longitude !== null) {
+        currentUserLocation = {
+          latitude: user.latitude,
+          longitude: user.longitude
+        };
+      }
+    }
+
+    res.render('board_new', {
+      currentUserLocation
+    });
+  } catch (err) {
+    console.error('Error showing new board page:', err);
+    res.status(500).send('Error loading page');
   }
 };
 

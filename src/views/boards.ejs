@@ -129,65 +129,10 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white border-bottom-0 d-flex justify-content-between align-items-center">
                         <h5 class="mb-0"><i class="bi bi-plus-circle"></i> 현장 생성</h5>
-                        <button id="toggle-create-board" type="button" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-chevron-down"></i> 폼 열기
-                        </button>
+                        <a href="/boards/new" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-circle"></i> 새 현장 만들기
+                        </a>
                     </div>
-                    <div id="create-board-body" class="card-body" style="display: none;">
-                        <form action="/boards" method="POST">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">현장 제목</label>
-                                    <input type="text" class="form-control" name="name" placeholder="Enter board name" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">설명</label>
-                                    <input type="text" class="form-control" name="description" placeholder="Enter description (optional)">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">위도</label>
-                                    <input type="number" class="form-control" name="latitude" placeholder="Click on map" step="any" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">경도</label>
-                                    <input type="number" class="form-control" name="longitude" placeholder="Click on map" step="any" required>
-                                </div>
-                                <div class="col-md-12">
-                                    <label class="form-label">주소</label>
-                                    <input type="text" class="form-control" name="address" placeholder="Enter address (optional)">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">현장 유형</label>
-                                    <input type="text" class="form-control" name="siteType" placeholder="e.g., 공장, 아파트, 도로 등">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">현장 상태</label>
-                                    <select class="form-select" name="siteStatus">
-                                        <option value="정상" selected>정상</option>
-                                        <option value="숨김">숨김</option>
-                                        <option value="공사 중">공사 중</option>
-                                        <option value="예정">예정</option>
-                                        <option value="중단">중단</option>
-                                        <option value="보류">보류</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-12">
-                                    <label class="form-label">Memo</label>
-                                    <textarea class="form-control" name="memo" rows="3" placeholder="Enter memo (optional)"></textarea>
-                                </div>
-                                <div class="col-md-12">
-                                    <label class="form-label">Tags (comma-separated)</label>
-                                    <input type="text" class="form-control" name="tags" placeholder="예: 태그1, 태그2, 태그3">
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <button type="submit" class="btn btn-gradient w-100">
-                                    <i class="bi bi-check-circle"></i> 게시판 생성
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
 
                 <!-- Navigation -->
                 <div class="card border-0 shadow-sm mt-4">
@@ -228,14 +173,12 @@
 
         // Store user's preferred location
         let userPreferredLocation = null;
+        let currentMarker = null; // 지도 클릭용 마커
 
         // Function to set map view to a specific location
         function setMapToLocation(lat, lng, zoom = 15) {
             map.setView([lat, lng], zoom);
-            if (currentMarker) {
-                map.removeLayer(currentMarker);
-            }
-            currentMarker = L.marker([lat, lng]).addTo(map);
+            // 마커 생성은 제거하고, 필요시 호출하는 곳에서만 생성하도록 수정
         }
 
         // Request user's current GPS location
@@ -253,8 +196,8 @@
                     const lng = position.coords.longitude;
                     console.log('GPS location obtained:', lat, lng);
 
-                    // Set map to user's current location
-                    setMapToLocation(lat, lng, 16);
+                    // Set map to user's current location (마커 생성 없이 지도만 이동)
+                    map.setView([lat, lng], 16);
                     userPreferredLocation = { lat, lng };
 
                     // Update form fields if creating a new board
@@ -287,7 +230,8 @@
                 const lat = parseFloat(userLat);
                 const lng = parseFloat(userLng);
                 console.log('Using user account location:', lat, lng);
-                setMapToLocation(lat, lng, 15);
+                // 지도만 이동하고 마커는 생성하지 않음
+                map.setView([lat, lng], 15);
                 userPreferredLocation = { lat, lng };
             } else {
                 console.log('No user location available, using default Seoul location');
@@ -397,17 +341,6 @@
                 ? '<i class="bi bi-eye"></i> 숨김 보드 보기: ON'
                 : '<i class="bi bi-eye-slash"></i> 숨김 보드 보기: OFF';
             buildMarkers();
-        });
-
-        // Toggle Create Board form
-        const createToggleBtn = document.getElementById('toggle-create-board');
-        const createBody = document.getElementById('create-board-body');
-        createToggleBtn.addEventListener('click', function() {
-            const isHidden = createBody.style.display === 'none';
-            createBody.style.display = isHidden ? 'block' : 'none';
-            createToggleBtn.innerHTML = isHidden
-                ? '<i class="bi bi-chevron-up"></i> 폼 닫기'
-                : '<i class="bi bi-chevron-down"></i> 폼 열기';
         });
 
         // Fit bounds handled in buildMarkers() based on currently visible layers

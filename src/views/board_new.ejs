@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>현장 생성</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/css/custom.css" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+
+    <style>
+        /* Enhanced styles for board creation */
+        .map-container {
+            height: 600px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 2px solid #e9ecef;
+        }
+
+        .creation-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: none;
+        }
+
+        .creation-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .creation-form {
+            padding: 2rem;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .form-section h6 {
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .btn-create:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-box .bi {
+            color: #007bff;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-8">
+                <!-- Header -->
+                <div class="creation-card mb-4">
+                    <div class="creation-header">
+                        <h1 class="mb-2"><i class="bi bi-plus-circle"></i> 현장 생성</h1>
+                        <p class="mb-0">새로운 현장을 등록하고 위치를 설정하세요</p>
+                    </div>
+
+                    <div class="creation-form">
+                        <form action="/boards" method="POST">
+                            <!-- Location Information Section -->
+                            <div class="form-section">
+                                <h6><i class="bi bi-geo-alt"></i> 위치 정보</h6>
+
+                                <!-- Map Container -->
+                                <div id="map" class="map-container mb-3"></div>
+
+                                <!-- Coordinates Input -->
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">위도 (Latitude)</label>
+                                        <input type="number"
+                                               class="form-control"
+                                               name="latitude"
+                                               id="latitude"
+                                               placeholder="지도에서 위치를 선택하세요"
+                                               step="any"
+                                               required
+                                               readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">경도 (Longitude)</label>
+                                        <input type="number"
+                                               class="form-control"
+                                               name="longitude"
+                                               id="longitude"
+                                               placeholder="지도에서 위치를 선택하세요"
+                                               step="any"
+                                               required
+                                               readonly>
+                                    </div>
+                                </div>
+
+                                <!-- Address Search -->
+                                <div class="mt-3">
+                                    <label class="form-label">주소로 위치 찾기</label>
+                                    <div class="input-group">
+                                        <input type="text"
+                                               class="form-control"
+                                               id="addressSearch"
+                                               placeholder="예: 서울시 강남구 테헤란로 123">
+                                        <button type="button"
+                                                class="btn btn-outline-primary"
+                                                id="searchAddressBtn">
+                                            <i class="bi bi-search"></i> 검색
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Info Box -->
+                                <div class="info-box mt-3">
+                                    <i class="bi bi-info-circle"></i>
+                                    <strong>지도 사용법:</strong> 지도를 클릭하거나 드래그하여 원하는 위치를 선택하세요.
+                                    주소 검색을 통해 특정 위치로 이동할 수도 있습니다.
+                                </div>
+                            </div>
+
+                            <!-- Basic Information Section -->
+                            <div class="form-section">
+                                <h6><i class="bi bi-building"></i> 기본 정보</h6>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">현장 제목 *</label>
+                                        <input type="text"
+                                               class="form-control"
+                                               name="name"
+                                               placeholder="현장 이름을 입력하세요"
+                                               required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">현장 유형</label>
+                                        <input type="text"
+                                               class="form-control"
+                                               name="siteType"
+                                               placeholder="예: 공장, 아파트, 도로 등">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">설명</label>
+                                    <textarea class="form-control"
+                                              name="description"
+                                              rows="3"
+                                              placeholder="현장에 대한 설명을 입력하세요 (선택사항)"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Additional Information Section -->
+                            <div class="form-section">
+                                <h6><i class="bi bi-clipboard-data"></i> 추가 정보</h6>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">현장 상태</label>
+                                        <select class="form-select" name="siteStatus">
+                                            <option value="정상" selected>정상</option>
+                                            <option value="숨김">숨김</option>
+                                            <option value="공사 중">공사 중</option>
+                                            <option value="예정">예정</option>
+                                            <option value="중단">중단</option>
+                                            <option value="보류">보류</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">주소</label>
+                                        <input type="text"
+                                               class="form-control"
+                                               name="address"
+                                               placeholder="현장 주소를 입력하세요 (선택사항)">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">메모</label>
+                                    <textarea class="form-control"
+                                              name="memo"
+                                              rows="3"
+                                              placeholder="추가 메모사항을 입력하세요 (선택사항)"></textarea>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">태그</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           name="tags"
+                                           placeholder="예: 태그1, 태그2, 태그3 (쉼표로 구분)">
+                                    <div class="form-text">태그는 쉼표(,)로 구분하여 입력하세요</div>
+                                </div>
+                            </div>
+
+                            <!-- Submit Buttons -->
+                            <div class="d-flex gap-2">
+                                <a href="/boards" class="btn btn-outline-secondary flex-fill">
+                                    <i class="bi bi-arrow-left"></i> 현장 목록으로 돌아가기
+                                </a>
+                                <button type="submit" class="btn btn-create flex-fill">
+                                    <i class="bi bi-check-circle"></i> 현장 생성하기
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([37.5665, 126.9780], 10);
+
+        // Add tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18
+        }).addTo(map);
+
+        // 마커 변수 선언
+        let locationMarker = null;
+
+        // 지도 클릭 이벤트 - 클릭한 위치에 마커 표시 및 폼 업데이트
+        map.on('click', function(e) {
+            updateFormCoordinates(e.latlng.lat, e.latlng.lng);
+
+            // 기존 마커 제거 후 새 마커 생성
+            if (locationMarker) {
+                map.removeLayer(locationMarker);
+            }
+
+            locationMarker = L.marker(e.latlng, {
+                title: '선택된 위치'
+            }).addTo(map).bindPopup('선택된 현장 위치').openPopup();
+        });
+
+        // 지도 이동 시 폼 좌표 업데이트 (기존 마커는 중앙으로 이동)
+        map.on('move', function() {
+            const center = map.getCenter();
+            updateFormCoordinates(center.lat, center.lng);
+
+            // 기존 마커가 있다면 중앙으로 이동
+            if (locationMarker) {
+                locationMarker.setLatLng(center);
+            }
+        });
+
+        // 폼 좌표 업데이트 함수
+        function updateFormCoordinates(lat, lng) {
+            document.getElementById('latitude').value = lat.toFixed(6);
+            document.getElementById('longitude').value = lng.toFixed(6);
+        }
+
+        // 주소 검색 기능
+        function searchAddress() {
+            const address = document.getElementById('addressSearch').value;
+            if (!address) {
+                alert('주소를 입력해주세요.');
+                return;
+            }
+
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=kr`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        const result = data[0];
+                        const location = [parseFloat(result.lat), parseFloat(result.lon)];
+
+                        // 지도 이동 및 폼 업데이트
+                        map.setView(location, 16);
+                        updateFormCoordinates(location[0], location[1]);
+
+                        // 마커 업데이트
+                        if (locationMarker) {
+                            locationMarker.setLatLng(location);
+                        } else {
+                            locationMarker = L.marker(location, {
+                                title: '선택된 위치'
+                            }).addTo(map).bindPopup('선택된 현장 위치').openPopup();
+                        }
+                    } else {
+                        alert('주소를 찾을 수 없습니다.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Geocoding error:', error);
+                    alert('주소 검색 중 오류가 발생했습니다.');
+                });
+        }
+
+        // 주소 검색 버튼 이벤트 리스너
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('searchAddressBtn').addEventListener('click', searchAddress);
+        });
+
+        // 초기 지도 중심을 폼에 반영
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const center = map.getCenter();
+                updateFormCoordinates(center.lat, center.lng);
+            }, 100);
+        });
+    </script>
+</body>
+</html>

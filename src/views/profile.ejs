@@ -229,7 +229,7 @@
                                                value="<%= user.latitude || '' %>"
                                                placeholder="위도"
                                                readonly>
-                                        <label for="latitude">위도 (Latitude)</label>
+                                        <label for="latitude">위도: <span id="currentLat"><%= user.latitude ? user.latitude.toFixed(6) : '' %></span></label>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -239,10 +239,10 @@
                                                class="form-control"
                                                id="longitude"
                                                name="longitude"
-                                               value="<%= user.longitude || '' %>"
+                                               value="<%= user.longitude ? user.longitude.toFixed(6) : '' %>"
                                                placeholder="경도"
                                                readonly>
-                                        <label for="longitude">경도 (Longitude)</label>
+                                        <label for="longitude">경도: <span id="currentLng"><%= user.longitude ? user.longitude.toFixed(6) : '' %></span></label>
                                     </div>
                                 </div>
                             </div>
@@ -263,12 +263,11 @@
                             </div>
 
                             <!-- Map Container -->
-                            <div class="mb-4">
                                 <label class="form-label">위치 지도</label>
                                 <div id="map" style="width: 100%; height: 300px; border-radius: 8px; border: 2px solid #e9ecef;"></div>
                                 <div class="form-text">
                                     <i class="bi bi-mouse"></i>
-                                    지도를 드래그하여 위치를 조정하세요. 마커는 항상 지도 중앙에 위치합니다.
+                                    지도를 드래그하여 위치를 조정하세요. 마커는 항상 현재 선택된 위치: <span id="currentLocation"><%= user.latitude && user.longitude ? `${user.latitude.toFixed(6)}, ${user.longitude.toFixed(6)}` : '37.5665, 126.9780' %></span>에 위치합니다.
                                 </div>
                             </div>
 
@@ -462,6 +461,8 @@
                 map.on('move', function() {
                     const center = map.getCenter();
                     updateCoordinates(center.lat, center.lng);
+                    // 마커도 중앙으로 이동
+                    marker.setLatLng(center);
                 });
 
                 // Set initial coordinates
@@ -476,12 +477,21 @@
         function updateCoordinates(lat, lng) {
             document.getElementById('latitude').value = lat.toFixed(6);
             document.getElementById('longitude').value = lng.toFixed(6);
+
+            // 실시간으로 화면에 표시되는 좌표 업데이트
+            const currentLatElement = document.getElementById('currentLat');
+            const currentLngElement = document.getElementById('currentLng');
+            const currentLocationElement = document.getElementById('currentLocation');
+
+            if (currentLatElement) currentLatElement.textContent = lat.toFixed(6);
+            if (currentLngElement) currentLngElement.textContent = lng.toFixed(6);
+            if (currentLocationElement) currentLocationElement.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
         }
 
         function searchAddress() {
             const address = document.getElementById('addressSearch').value;
             if (!address) {
-                alert('주소를 입력해주세요.');
+                alert('Please enter an address.');
                 return;
             }
 

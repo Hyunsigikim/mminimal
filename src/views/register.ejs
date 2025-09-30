@@ -520,6 +520,8 @@
                 map.on('move', function() {
                     const center = map.getCenter();
                     updateCoordinates(center.lat, center.lng);
+                    // 마커도 중앙으로 이동
+                    marker.setLatLng(center);
                 });
 
                 // Set initial coordinates

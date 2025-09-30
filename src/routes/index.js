@@ -24,6 +24,7 @@ router.post('/profile', userController.updateProfile);
 router.post('/admin/fix-usernames', userController.fixUsernames);
 // 게시판 라우트
 router.get('/boards', boardController.getBoards);
+router.get('/boards/new', boardController.showNewBoard);
 router.post('/boards', boardController.createBoard);
 
 // 게시글 라우트
