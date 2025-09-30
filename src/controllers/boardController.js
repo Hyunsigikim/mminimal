@@ -18,9 +18,19 @@ exports.getBoards = async (req, res) => {
       }
     }
 
+    // Get user data if logged in
+    let userData = null;
+    if (req.session?.userId) {
+      const user = await User.findById(req.session.userId).select('-password -__v');
+      if (user) {
+        userData = user.toObject();
+      }
+    }
+
     res.render('boards', {
       boards,
-      currentUserLocation
+      currentUserLocation,
+      user: userData
     });
   } catch (err) {
     console.error('Error fetching boards:', err);

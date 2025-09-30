@@ -162,92 +162,83 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-        // Initialize map with user's location
-        const map = L.map('map').setView([37.5665, 126.9780], 10);
+    <!-- Data Containers -->
+    <script id="user-data" type="application/json"><%- JSON.stringify(user) %></script>
+    <script id="board-data" type="application/json"><%- JSON.stringify(boards) %></script>
 
-        // Add tiles
+    <script>
+        // Initialize data
+        const userData = JSON.parse(document.getElementById('user-data').textContent || 'null');
+        const boardData = JSON.parse(document.getElementById('board-data').textContent || '[]');
+        let userPreferredLocation = null;
+        
+        // Initialize map
+        const map = L.map('map').setView([37.5665, 126.9780], 10);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 18
         }).addTo(map);
-
-        // Store user's preferred location
-        let userPreferredLocation = null;
-        let currentMarker = null; // 지도 클릭용 마커
-
-        // Function to set map view to a specific location
-        function setMapToLocation(lat, lng, zoom = 15) {
-            map.setView([lat, lng], zoom);
-            // 마커 생성은 제거하고, 필요시 호출하는 곳에서만 생성하도록 수정
-        }
-
-        // Request user's current GPS location
-        function requestUserLocation() {
-            if (!navigator.geolocation) {
-                console.log('Geolocation is not supported by this browser');
-                useUserAccountLocation();
-                return;
-            }
-
-            console.log('Requesting GPS location...');
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    console.log('GPS location obtained:', lat, lng);
-
-                    // Set map to user's current location (마커 생성 없이 지도만 이동)
-                    map.setView([lat, lng], 16);
-                    userPreferredLocation = { lat, lng };
-
-                    // Update form fields if creating a new board
-                    const latField = document.querySelector('input[name="latitude"]');
-                    const lngField = document.querySelector('input[name="longitude"]');
-                    if (latField && lngField) {
-                        latField.value = lat.toFixed(6);
-                        lngField.value = lng.toFixed(6);
-                    }
-                },
-                function(error) {
-                    console.log('GPS location denied or error:', error.code, error.message);
-                    useUserAccountLocation();
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 300000 // 5 minutes
+        
+        // Map utility functions
+        const mapUtils = {
+            // Set map view to specific coordinates
+            setView: (lat, lng, zoom = 15) => map.setView([lat, lng], zoom),
+            
+            // Request current GPS location
+            requestCurrentLocation: () => {
+                if (!navigator.geolocation) {
+                    console.log('Geolocation is not supported');
+                    mapUtils.useAccountLocation();
+                    return;
                 }
-            );
-        }
 
-        // Use user's account location as fallback
-        function useUserAccountLocation() {
-            const mapElement = document.getElementById('map');
-            const userLat = mapElement.dataset.userLat;
-            const userLng = mapElement.dataset.userLng;
-
-            if (userLat && userLng && userLat !== '' && userLng !== '') {
-                const lat = parseFloat(userLat);
-                const lng = parseFloat(userLng);
-                console.log('Using user account location:', lat, lng);
-                // 지도만 이동하고 마커는 생성하지 않음
-                map.setView([lat, lng], 15);
-                userPreferredLocation = { lat, lng };
-            } else {
-                console.log('No user location available, using default Seoul location');
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const { latitude: lat, longitude: lng } = position.coords;
+                        console.log('GPS location obtained:', lat, lng);
+                        mapUtils.setView(lat, lng, 16);
+                        userPreferredLocation = { lat, lng };
+                        mapUtils.updateLocationFields(lat, lng);
+                    },
+                    error => {
+                        console.log('GPS error:', error.code, error.message);
+                        mapUtils.useAccountLocation();
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+                );
+            },
+            
+            // Use account location as fallback
+            useAccountLocation: () => {
+                if (userData?.latitude && userData?.longitude) {
+                    const { latitude: lat, longitude: lng } = userData;
+                    console.log('Using account location:', lat, lng);
+                    mapUtils.setView(lat, lng, 15);
+                    userPreferredLocation = { lat, lng };
+                } else {
+                    console.log('No location data available');
+                }
+            },
+            
+            // Update location input fields
+            updateLocationFields: (lat, lng) => {
+                const inputs = {
+                    lat: document.querySelector('input[name="latitude"]'),
+                    lng: document.querySelector('input[name="longitude"]')
+                };
+                
+                if (inputs.lat && inputs.lng) {
+                    inputs.lat.value = lat.toFixed(6);
+                    inputs.lng.value = lng.toFixed(6);
+                }
             }
-        }
+        };
 
-        // Initialize location on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            // Small delay to ensure map is ready
-            setTimeout(function() {
-                requestUserLocation();
-            }, 100);
+        // Request location on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(mapUtils.requestCurrentLocation, 100);
         });
 
-        // Add board markers (by status)
-        const boardData = <%- JSON.stringify(boards) %>;
+        // Board data is now available from the parsed JSON
         let showHidden = false;
         const visibleLayers = [];
         const hiddenLayers = [];
@@ -343,7 +334,6 @@
             buildMarkers();
         });
 
-        // Fit bounds handled in buildMarkers() based on currently visible layers
     </script>
 </body>
 </html>
