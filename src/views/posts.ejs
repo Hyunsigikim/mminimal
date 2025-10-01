@@ -363,7 +363,8 @@
                                                 value="<%= search || '' %>">
                                     </div>
                                     <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-search"></i> 검색
+                                        <i class="bi bi-search"></i>
+                                        <span class="d-none d-sm-inline"> 검색</span>
                                     </button>
                                     <% if (search) { %>
                                     <a href="/boards/<%= boardId %>/posts" class="btn btn-outline-secondary">
@@ -578,12 +579,13 @@
                                                   placeholder="댓글을 남겨주세요..."
                                                   required></textarea>
                                     </div>
-                                    <div class="d-flex justify-content-between">
-                                        <button type="button" class="btn btn-outline-secondary" onclick="hideCommentForm('<%= post._id %>')">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="hideCommentForm('<%= post._id %>')">
                                             <i class="bi bi-x-lg"></i> 취소
                                         </button>
-                                        <button type="submit" class="btn btn-gradient">
-                                            <i class="bi bi-send"></i> 댓글 남기기
+                                        <button type="submit" class="btn btn-success btn-sm" title="댓글 등록">
+                                            <i class="bi bi-send"></i>
+                                            <span class="ms-1">등록</span>
                                         </button>
                                     </div>
                                 </form>
@@ -593,9 +595,9 @@
                         <!-- Post Actions -->
                         <div class="card-footer bg-light border-top-0">
                             <div class="d-flex justify-content-between align-items-center">
-                                <button type="button" class="btn btn-success btn-sm add-comment-btn" onclick="showCommentForm('<%= post._id %>')">
+                                <button type="button" class="btn btn-outline-success btn-sm add-comment-btn" onclick="showCommentForm('<%= post._id %>')" title="댓글 남기기">
                                     <i class="bi bi-plus-circle"></i>
-                                    <span class="d-none d-sm-inline"> 댓글 남기기</span>
+                                    <span class="d-none d-md-inline"> 댓글 남기기</span>
                                 </button>
                                 <small class="text-muted">
                                     <i class="bi bi-clock"></i> <%= new Date(post.createdAt).toLocaleString() %>
@@ -712,6 +714,7 @@
     <script>
         // Toggle board meta inputs (enable/disable) and buttons
         document.addEventListener('DOMContentLoaded', function(){
+            // Search functionality
             const toggleBtn = document.getElementById('toggle-board-meta-edit');
             const saveBtn = document.getElementById('board-meta-save');
             const cancelBtn = document.getElementById('board-meta-cancel');

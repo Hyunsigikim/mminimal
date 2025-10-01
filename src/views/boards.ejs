@@ -26,6 +26,13 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
+        /* 모바일 화면에서 지도 크기 조정 */
+        @media (max-width: 768px) {
+            .map-container {
+                height: 300px; /* 모바일에서 더 작은 높이로 조정 */
+            }
+        }
+
         .board-card {
             transition: all 0.2s ease;
             border: none;
@@ -88,31 +95,176 @@
                     </div>
                 </div>
 
+                <!-- Search and Filter Section -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <form id="searchForm" class="row g-3" method="GET" action="/boards">
+                            <input type="hidden" name="page" value="1">
+                            
+                            <!-- Search Input -->
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           name="search" 
+                                           placeholder="검색어를 입력하세요" 
+                                           value="<%= filters.search || '' %>">
+                                    <button class="btn btn-outline-secondary" type="submit">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Status Filter -->
+                            <div class="col-md-3">
+                                <select class="form-select" name="status" onchange="this.form.submit()">
+                                    <option value="">모든 상태</option>
+                                    <% availableStatuses.forEach(status => { %>
+                                        <option value="<%= status %>" <%= filters.status === status ? 'selected' : '' %>>
+                                            <%= status %>
+                                        </option>
+                                    <% }); %>
+                                </select>
+                            </div>
+                            
+                            <!-- Sort Options -->
+                            <div class="col-md-3">
+                                <select class="form-select" id="sortSelect">
+                                    <option value="name">이름순</option>
+                                    <option value="createdAt">최신순</option>
+                                    <option value="distance" id="distanceSortOption">거리순</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Items Per Page -->
+                            <div class="col-md-2">
+                                <select class="form-select" name="limit" onchange="this.form.submit()">
+                                    <option value="10" <%= pagination.limit === 10 ? 'selected' : '' %>>10개씩 보기</option>
+                                    <option value="20" <%= pagination.limit === 20 ? 'selected' : '' %>>20개씩 보기</option>
+                                    <option value="50" <%= pagination.limit === 50 ? 'selected' : '' %>>50개씩 보기</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Boards Count -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="text-muted">
+                        총 <strong><%= pagination.total %></strong>개의 현장이 있습니다.
+                    </div>
+                </div>
+
                 <!-- Boards Grid -->
-                <div class="row g-3 mb-4">
-                    <% boards.forEach(board => { %>
-                    <div class="col-md-6 col-lg-4">
-                        <div class="card board-card h-100">
-                            <div class="card-body d-flex flex-column">
-                                <a href="/boards/<%= board._id %>/posts" class="board-link">
-                                    <h6 class="card-title text-dark mb-2"><%= board.name %></h6>
-                                    <p class="card-text text-muted small mb-3">
-                                        <%= board.description || 'No description available' %>
-                                    </p>
-                                    <div class="board-location mt-auto">
-                                        <i class="bi bi-geo-alt"></i>
-                                        <% if (board.latitude && board.longitude && board.latitude !== 0 && board.longitude !== 0) { %>
-                                            <%= board.latitude %>, <%= board.longitude %>
-                                        <% } else { %>
-                                            위치 정보가 없습니다.
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2 mb-3">
+                    <% if (boards.length > 0) { %>
+                        <% boards.forEach(board => { %>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card board-card h-100 shadow-sm">
+                                <div class="card-body d-flex flex-column p-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <h6 class="card-title text-dark mb-0 small"><%= board.name %></h6>
+                                        <% if (board.siteStatus) { %>
+                                            <span class="badge bg-<%= {
+                                                '정상': 'success',
+                                                '숨김': 'secondary',
+                                                '공사 중': 'warning',
+                                                '예정': 'info',
+                                                '중단': 'danger',
+                                                '보류': 'dark'
+                                            }[board.siteStatus] || 'secondary' %>">
+                                                <%= board.siteStatus %>
+                                            </span>
                                         <% } %>
                                     </div>
-                                </a>
+                                    
+                                    <% if (board.description) { %>
+                                        <p class="card-text text-muted small mb-1 mt-1">
+                                            <%= board.description.length > 30 ? board.description.substring(0, 30) + '...' : board.description %>
+                                        </p>
+                                    <% } %>
+                                    
+                                    <div class="board-location mt-auto">
+                                        <div class="d-flex align-items-center text-muted small">
+                                            <i class="bi bi-geo-alt me-1"></i>
+                                            <div class="text-truncate" style="max-width: 100%;" title="<%= board.address || '주소 정보 없음' %>">
+                                                <% if (board.address) { %>
+                                                    <%= board.address.length > 20 ? board.address.substring(0, 20) + '...' : board.address %>
+                                                    <% if (board.distance !== undefined) { %>
+                                                        <span class="ms-1 badge bg-light text-dark">
+                                                            <i class="bi bi-arrow-right-circle"></i> <%= board.distance.toFixed(1) %>km
+                                                        </span>
+                                                    <% } %>
+                                                <% } else { %>
+                                                    <span class="text-muted">주소 정보 없음</span>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-2 text-end">
+                                        <a href="/boards/<%= board._id %>/posts" class="btn btn-sm btn-outline-primary py-0">
+                                            상세보기 <i class="bi bi-arrow-right ms-1"></i>
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <% }); %>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="col-12">
+                            <div class="alert alert-info mb-0">
+                                검색 결과가 없습니다.
+                            </div>
+                        </div>
+                    <% } %>
                 </div>
+
+                <!-- Pagination -->
+                <% if (pagination.pages > 1) { %>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            <% if (pagination.page > 1) { %>
+                                <li class="page-item">
+                                    <a class="page-link" href="<%= getPageUrl(1) %>" aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="<%= getPageUrl(pagination.page - 1) %>" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            <% } %>
+                            
+                            <% const maxPages = 5; // Maximum number of page buttons to show %>
+                            <% let startPage = Math.max(1, pagination.page - Math.floor(maxPages / 2)); %>
+                            <% let endPage = Math.min(pagination.pages, startPage + maxPages - 1); %>
+                            <% if (endPage - startPage + 1 < maxPages) { %>
+                                <% startPage = Math.max(1, endPage - maxPages + 1); %>
+                            <% } %>
+                            
+                            <% for (let i = startPage; i <= endPage; i++) { %>
+                                <li class="page-item <%= i === pagination.page ? 'active' : '' %>">
+                                    <a class="page-link" href="<%= getPageUrl(i) %>"><%= i %></a>
+                                </li>
+                            <% } %>
+                            
+                            <% if (pagination.page < pagination.pages) { %>
+                                <li class="page-item">
+                                    <a class="page-link" href="<%= getPageUrl(pagination.page + 1) %>" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="<%= getPageUrl(pagination.pages) %>" aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
+                                </li>
+                            <% } %>
+                        </ul>
+                    </nav>
+                <% } %>
 
                 <% if (boards.length === 0) { %>
                 <!-- Empty State -->
@@ -154,6 +306,79 @@
         </div>
     </div>
 
+    <!-- Location Status Toasts -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="locationLoadingToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-primary text-white">
+                <strong class="me-auto">위치 확인 중</strong>
+                <div class="spinner-border spinner-border-sm text-light" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div class="toast-body">
+                정확한 위치를 확인하고 있습니다. 잠시만 기다려주세요...
+            </div>
+        </div>
+        
+        <div id="locationSuccessToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+            <div class="toast-header bg-success text-white">
+                <strong class="me-auto">위치 확인 완료</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                현재 위치가 지도에 표시되었습니다.
+            </div>
+        </div>
+        
+        <div id="locationErrorToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+            <div class="toast-header bg-danger text-white">
+                <strong class="me-auto">위치 확인 실패</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="errorMessage">
+                위치 정보를 가져오는 중 오류가 발생했습니다.
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Location Correction Button (Floating) -->
+    <div class="position-fixed bottom-3 start-50 translate-middle-x" style="z-index: 10">
+        <button type="button" class="btn btn-primary" id="correctLocationBtn" data-bs-toggle="modal" data-bs-target="#locationCorrectionModal">
+            <i class="bi bi-geo-alt"></i> 위치 수정
+        </button>
+    </div>
+
+    <!-- Location Correction Modal -->
+    <div class="modal fade" id="locationCorrectionModal" tabindex="-1" aria-labelledby="locationCorrectionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="locationCorrectionModalLabel">위치 수정</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>현재 위치가 정확하지 않다면, 아래에서 직접 위치를 검색하거나 지도에서 클릭하여 수정할 수 있습니다.</p>
+                    <div class="mb-3">
+                        <label for="locationSearch" class="form-label">주소 검색</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="locationSearch" placeholder="주소를 입력하세요">
+                            <button class="btn btn-outline-secondary" type="button" id="searchLocationBtn">검색</button>
+                        </div>
+                    </div>
+                    <div id="mapForCorrection" style="height: 300px; width: 100%;"></div>
+                    <div class="mt-3">
+                        <p class="mb-1">선택한 위치:</p>
+                        <p id="selectedLocation" class="text-muted">지도에서 위치를 클릭하거나 주소를 검색하세요.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-primary" id="confirmLocationBtn" disabled>이 위치로 설정</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
@@ -169,58 +394,432 @@
     <script>
         // Initialize data
         const userData = JSON.parse(document.getElementById('user-data').textContent || 'null');
-        const boardData = JSON.parse(document.getElementById('board-data').textContent || '[]');
+        let boardData = JSON.parse(document.getElementById('board-data').textContent || '[]');
         let userPreferredLocation = null;
+        let currentSort = 'name'; // Default sort
+        let locationRequested = false; // Track if location was already requested
         
-        // Initialize map
-        const map = L.map('map').setView([37.5665, 126.9780], 10);
+        // Initialize map with default view (will be updated with user's location)
+        const map = L.map('map', {
+            zoomControl: true,
+            zoom: 17, // Fixed zoom level for ~300m view
+            maxZoom: 19,
+            minZoom: 10,
+            gestureHandling: true
+        });
+        
+        // Add OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 18
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(map);
+        
+        // Add zoom control (left side only)
+        L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        
+        // Add scale control (left side only, metric only)
+        L.control.scale({
+            position: 'bottomleft',
+            maxWidth: 200,
+            metric: true,
+            imperial: false,
+            updateWhenIdle: true
         }).addTo(map);
         
         // Map utility functions
         const mapUtils = {
-            // Set map view to specific coordinates
-            setView: (lat, lng, zoom = 15) => map.setView([lat, lng], zoom),
+            // Set map view to specific coordinates with smooth animation
+            setView: (lat, lng, zoom = 14) => {
+                map.flyTo([lat, lng], zoom, {
+                    animate: true,
+                    duration: 1,
+                    easeLinearity: 0.25
+                });
+                
+                // Add a marker for user's location
+                if (window.userLocationMarker) {
+                    map.removeLayer(window.userLocationMarker);
+                }
+                
+                window.userLocationMarker = L.circleMarker([lat, lng], {
+                    radius: 8,
+                    fillColor: '#3388ff',
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map);
+                
+                // Add a pulsing effect to the user's location
+                const pulseMarker = L.circleMarker([lat, lng], {
+                    radius: 8,
+                    fillColor: '#3388ff',
+                    color: '#fff',
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.3
+                }).addTo(map);
+                
+                // Animate the pulse effect
+                let size = 8;
+                const maxSize = 20;
+                const interval = setInterval(() => {
+                    size += 2;
+                    if (size > maxSize) {
+                        clearInterval(interval);
+                        map.removeLayer(pulseMarker);
+                    } else {
+                        pulseMarker.setRadius(size);
+                        pulseMarker.setStyle({
+                            opacity: 1 - (size / maxSize),
+                            fillOpacity: 0.3 * (1 - (size / maxSize))
+                        });
+                    }
+                }, 50);
+            },
             
-            // Request current GPS location
-            requestCurrentLocation: () => {
+            // Request current GPS location with high accuracy
+            requestCurrentLocation: (highAccuracy = true) => {
+                console.log('Starting location request...');
+                if (locationRequested) {
+                    console.log('Location request already in progress');
+                    return; // Prevent multiple requests
+                }
+                locationRequested = true;
+                
+                // Show loading indicator
+                const loadingToast = new bootstrap.Toast(document.getElementById('locationLoadingToast'));
+                try {
+                    loadingToast.show();
+                    console.log('Showing loading toast');
+                } catch (e) {
+                    console.error('Error showing loading toast:', e);
+                }
+                
+                // 1. First try to use account location if available
+                if (userData?.latitude && userData?.longitude) {
+                    console.log('Using account location from profile');
+                    try {
+                        const { latitude: lat, longitude: lng } = userData;
+                        userPreferredLocation = { lat, lng };
+                        mapUtils.updateLocationFields(lat, lng);
+                        mapUtils.setView(lat, lng, 17);
+                        console.log('Successfully set view to account location');
+                    } catch (e) {
+                        console.error('Error using account location:', e);
+                    } finally {
+                        loadingToast.hide();
+                    }
+                    return;
+                }
+                
+                // 2. Try to get precise GPS location
+                if (navigator.geolocation) {
+                    console.log('Requesting precise location...');
+                    navigator.geolocation.getCurrentPosition(
+                        position => {
+                            const { latitude: lat, longitude: lng, accuracy } = position.coords;
+                            console.log('GPS location obtained:', { lat, lng, accuracy });
+                            
+                            userPreferredLocation = { lat, lng };
+                            mapUtils.updateLocationFields(lat, lng);
+                            mapUtils.setView(lat, lng, 17);
+                            
+                            // Enable distance sort option
+                            const distanceOption = document.getElementById('distanceSortOption');
+                            if (distanceOption) {
+                                distanceOption.disabled = false;
+                                if (currentSort === 'distance') {
+                                    sortBoards();
+                                }
+                            }
+                            
+                            loadingToast.hide();
+                        },
+                        error => {
+                            console.log('GPS error:', error.code, error.message);
+                            
+                            // Fall back to IP-based location
+                            mapUtils.useIPLocation();
+                        },
+                        { 
+                            enableHighAccuracy: true, 
+                            timeout: 10000, 
+                            maximumAge: 0 
+                        }
+                    );
+                } else {
+                    // If geolocation is not supported, try IP-based location
+                    mapUtils.useIPLocation();
+                }
+            },
+            
+            // Use IP-based location as fallback using our GeoIP2 service
+            useIPLocation: function() {
+                console.log('Falling back to IP-based location using GeoIP2...');
+                let loadingToast;
+                try {
+                    loadingToast = bootstrap.Toast.getInstance(document.getElementById('locationLoadingToast')) || 
+                                 new bootstrap.Toast(document.getElementById('locationLoadingToast'));
+                    loadingToast.show();
+                } catch (e) {
+                    console.error('Error getting loading toast:', e);
+                }
+                
+                console.log('Fetching IP-based location from our GeoIP2 service...');
+                fetch('/api/geolocation')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('GeoIP2 API response:', data);
+                        if (data.success && data.data.latitude && data.data.longitude) {
+                            const lat = parseFloat(data.data.latitude);
+                            const lng = parseFloat(data.data.longitude);
+                            const accuracy = data.data.accuracy_radius || 1000; // 기본 정확도 1km
+                            
+                            console.log('GeoIP2 location obtained:', { lat, lng, accuracy });
+                            
+                            userPreferredLocation = { lat, lng };
+                            mapUtils.updateLocationFields(lat, lng);
+                            
+                            // 정확도에 따라 줌 레벨 조정 (높은 정확도일수록 더 많이 확대)
+                            const zoomLevel = accuracy < 1000 ? 15 : accuracy < 5000 ? 13 : 11;
+                            mapUtils.setView(lat, lng, zoomLevel);
+                            
+                            // 위치 정확도에 따른 메시지 표시
+                            try {
+                                const errorToast = new bootstrap.Toast(document.getElementById('locationErrorToast'));
+                                const errorMessage = document.getElementById('errorMessage');
+                                if (errorMessage) {
+                                    const accuracyKm = Math.round(accuracy / 100) / 10; // 미터를 킬로미터로 변환
+                                    errorMessage.textContent = `IP 기반 위치 (정확도: ${accuracyKm}km 이내)를 표시합니다.`;
+                                }
+                                errorToast.show();
+                            } catch (e) {
+                                console.error('Error showing error toast:', e);
+                            }
+                        } else {
+                            throw new Error('No valid location data from GeoIP2 service');
+                        }
+                    })
+                    .catch(ipError => {
+                        console.error('GeoIP2 location error:', ipError);
+                        mapUtils.useDefaultLocation();
+                    })
+                    .finally(() => {
+                        try {
+                            if (loadingToast) loadingToast.hide();
+                        } catch (e) {
+                            console.error('Error hiding loading toast:', e);
+                        }
+                    });
+            },
+            
+            // Use default location (Seoul) as last resort
+            useDefaultLocation: function() {
+                console.log('Using default location (Seoul)');
+                const lat = 37.5665;
+                const lng = 126.9780;
+                userPreferredLocation = { lat, lng };
+                mapUtils.updateLocationFields(lat, lng);
+                mapUtils.setView(lat, lng, 12);
+                
+                const errorToast = new bootstrap.Toast(document.getElementById('locationErrorToast'));
+                document.getElementById('errorMessage').textContent = 
+                    '위치를 가져올 수 없어 기본 위치(서울 시청)를 표시합니다.';
+                errorToast.show();
+            },
+            
+            // Update location fields in the UI
+            updateLocationFields: function(lat, lng) {
+                // Update any location-related UI elements here
+                console.log('Updating location fields:', { lat, lng });
+                
+                // Enable distance sort option when location is available
+                const distanceOption = document.getElementById('distanceSortOption');
+                if (distanceOption) {
+                    distanceOption.disabled = false;
+                    if (currentSort === 'distance') {
+                        sortBoards();
+                    }
+                }
+            }
+        };
+
+        // 위치 정보를 가져오는 함수
+        function getCurrentLocation() {
+            return new Promise((resolve, reject) => {
                 if (!navigator.geolocation) {
-                    console.log('Geolocation is not supported');
-                    mapUtils.useAccountLocation();
+                    reject(new Error('Geolocation is not supported by your browser'));
                     return;
                 }
 
+                // 위치 정보 요청 (높은 정확도, 캐시 없이 새로 가져오기)
                 navigator.geolocation.getCurrentPosition(
-                    position => {
-                        const { latitude: lat, longitude: lng } = position.coords;
-                        console.log('GPS location obtained:', lat, lng);
-                        mapUtils.setView(lat, lng, 16);
-                        userPreferredLocation = { lat, lng };
-                        mapUtils.updateLocationFields(lat, lng);
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const accuracy = position.coords.accuracy;
+                        
+                        console.log('Current position:', { lat, lng, accuracy });
+                        resolve({ lat, lng, accuracy });
                     },
-                    error => {
-                        console.log('GPS error:', error.code, error.message);
-                        mapUtils.useAccountLocation();
+                    (error) => {
+                        console.warn('Error getting location:', error.message);
+                        reject(error);
                     },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
                 );
-            },
-            
-            // Use account location as fallback
-            useAccountLocation: () => {
+            });
+        }
+
+        // Initialize the map when the page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOM fully loaded, initializing map...');
+
+            // 기본 위치 (서울)
+            let defaultLat = 37.5665;
+            let defaultLng = 126.9780;
+            let defaultZoom = 12;
+
+            try {
+                // 1. 먼저 브라우저의 현재 위치 정보를 시도
+                const position = await getCurrentLocation();
+                defaultLat = position.lat;
+                defaultLng = position.lng;
+                defaultZoom = 14; // 정확한 위치일 때는 더 가까이서 보여주기
+                console.log('Using current browser location:', { lat: defaultLat, lng: defaultLng });
+                
+                // 위치 정보를 성공적으로 가져왔을 때만 토스트 메시지 표시
+                const successToast = new bootstrap.Toast(document.getElementById('locationSuccessToast'));
+                successToast.show();
+                
+            } catch (error) {
+                console.warn('Could not get current location, falling back to saved location');
+                
+                // 2. 실패 시 사용자 계정에 저장된 위치 시도
+                if (userData && userData.latitude && userData.longitude) {
+                    defaultLat = parseFloat(userData.latitude);
+                    defaultLng = parseFloat(userData.longitude);
+                    defaultZoom = 12;
+                    console.log('Using user saved location:', { lat: defaultLat, lng: defaultLng });
+                    
+                    // 저장된 위치 사용 시 토스트 메시지 표시
+                    const savedToast = new bootstrap.Toast(document.getElementById('locationSavedToast'));
+                    savedToast.show();
+                } else {
+                    console.log('Using default location (Seoul)');
+                    
+                    // 기본 위치 사용 시 토스트 메시지 표시
+                    const defaultToast = new bootstrap.Toast(document.getElementById('locationDefaultToast'));
+                    defaultToast.show();
+                }
+            }
+
+            // 최종적으로 지도 초기화
+            try {
+                mapUtils.setView(defaultLat, defaultLng, defaultZoom);
+                
+                // 위치 표시 마커 추가 (현재 위치)
+                L.marker([defaultLat, defaultLng], {
+                    icon: L.divIcon({
+                        className: 'current-location-marker',
+                        html: '<div style="background-color: #4285f4; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12]
+                    })
+                }).addTo(map);
+                
+            } catch (e) {
+                console.error('Error initializing map:', e);
+                // 최종 폴백으로 서울 표시
+                try {
+                    mapUtils.setView(37.5665, 126.9780, 12);
+                } catch (err) {
+                    console.error('Failed to set fallback map view:', err);
+                }
+            }
+        });
+
+        // Add any missing methods to mapUtils if they don't exist
+        if (!mapUtils.useIPLocation) {
+            mapUtils.useIPLocation = function() {
+                console.log('Falling back to IP-based location...');
+                const loadingToast = bootstrap.Toast.getInstance(document.getElementById('locationLoadingToast'));
+                
+                fetch('https://ipapi.co/json/')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.latitude && data.longitude) {
+                            const lat = parseFloat(data.latitude);
+                            const lng = parseFloat(data.longitude);
+                            console.log('IP-based location obtained:', { lat, lng });
+                            
+                            userPreferredLocation = { lat, lng };
+                            mapUtils.updateLocationFields(lat, lng);
+                            mapUtils.setView(lat, lng, 15); // Wider zoom for less accurate location
+                            
+                            // Show info about approximate location
+                            const errorToast = new bootstrap.Toast(document.getElementById('locationErrorToast'));
+                            document.getElementById('errorMessage').textContent = 
+                                '정확한 위치를 가져올 수 없어 IP 기반의 대략적인 위치를 표시합니다.';
+                            errorToast.show();
+                        } else {
+                            throw new Error('No location data from IP service');
+                        }
+                    })
+                    .catch(ipError => {
+                        console.error('IP location error:', ipError);
+                        mapUtils.useDefaultLocation();
+                    })
+                    .finally(() => {
+                        if (loadingToast) loadingToast.hide();
+                    });
+            };
+        }
+
+        if (!mapUtils.useDefaultLocation) {
+            mapUtils.useDefaultLocation = function() {
+                console.log('Using default location (Seoul)');
+                const lat = 37.5665;
+                const lng = 126.9780;
+                userPreferredLocation = { lat, lng };
+                mapUtils.updateLocationFields(lat, lng);
+                mapUtils.setView(lat, lng, 12);
+                
+                const errorToast = new bootstrap.Toast(document.getElementById('locationErrorToast'));
+                document.getElementById('errorMessage').textContent = 
+                    '위치를 가져올 수 없어 기본 위치(서울 시청)를 표시합니다.';
+                errorToast.show();
+            };
+        }
+
+        if (!mapUtils.useAccountLocation) {
+            mapUtils.useAccountLocation = function() {
                 if (userData?.latitude && userData?.longitude) {
                     const { latitude: lat, longitude: lng } = userData;
                     console.log('Using account location:', lat, lng);
-                    mapUtils.setView(lat, lng, 15);
                     userPreferredLocation = { lat, lng };
-                } else {
-                    console.log('No location data available');
+                    mapUtils.updateLocationFields(lat, lng);
+                    mapUtils.setView(lat, lng, 15);
+                    return true;
                 }
-            },
-            
-            // Update location input fields
-            updateLocationFields: (lat, lng) => {
+                return false;
+            };
+        }
+
+        if (!mapUtils.updateLocationFields) {
+            mapUtils.updateLocationFields = function(lat, lng) {
                 const inputs = {
                     lat: document.querySelector('input[name="latitude"]'),
                     lng: document.querySelector('input[name="longitude"]')
@@ -230,12 +829,104 @@
                     inputs.lat.value = lat.toFixed(6);
                     inputs.lng.value = lng.toFixed(6);
                 }
-            }
-        };
+            };
+        }
 
-        // Request location on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(mapUtils.requestCurrentLocation, 100);
+        // Calculate distance between two coordinates in kilometers
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Radius of the earth in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c; // Distance in km
+        }
+
+        // Sort boards based on current sort option
+        function sortBoards() {
+            console.log('Sorting boards by:', currentSort);
+            
+            // Create a copy of the original board data to sort
+            const sortedBoards = [...boardData];
+            
+            if (currentSort === 'name') {
+                sortedBoards.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (currentSort === 'createdAt') {
+                sortedBoards.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            } else if (currentSort === 'distance' && userPreferredLocation) {
+                sortedBoards.forEach(board => {
+                    if (board.latitude && board.longitude) {
+                        board.distance = getDistance(
+                            userPreferredLocation.lat,
+                            userPreferredLocation.lng,
+                            board.latitude,
+                            board.longitude
+                        );
+                    } else {
+                        board.distance = Infinity;
+                    }
+                });
+                sortedBoards.sort((a, b) => a.distance - b.distance);
+            }
+            
+            // Update the board data with the sorted array
+            boardData = sortedBoards;
+            console.log('Sorted boards:', boardData);
+            updateBoardDisplay();
+        }
+
+        // Update the board display based on current filters and sort
+        function updateBoardDisplay() {
+            console.log('Updating board display with sort:', currentSort);
+            
+            // Clear existing layers
+            visibleLayers.forEach(layer => map.removeLayer(layer));
+            visibleLayers.length = 0;
+            hiddenLayers.length = 0;
+            
+            // Rebuild markers with current sort
+            buildMarkers();
+            
+            // Update the board list (if you have a list view)
+            // updateBoardList();
+            
+            console.log('Display updated');
+        }
+
+        // Initialize the map and request location when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize map with default view (Seoul)
+            mapUtils.setView(37.5665, 126.9780, 12);
+            
+            // Request location after a short delay to ensure map is loaded
+            setTimeout(() => {
+                mapUtils.requestCurrentLocation(true);
+            }, 1000);
+            // Set up sort change handler
+            const sortSelect = document.getElementById('sortSelect');
+            if (sortSelect) {
+                sortSelect.addEventListener('change', (e) => {
+                    console.log('Sort changed to:', e.target.value);
+                    currentSort = e.target.value;
+                    sortBoards();
+                });
+            } else {
+                console.error('Sort select element not found');
+            }
+
+            // Set initial sort from URL parameter if exists
+            const urlParams = new URLSearchParams(window.location.search);
+            const sortParam = urlParams.get('sort');
+            if (sortParam) {
+                document.getElementById('sortSelect').value = sortParam;
+                currentSort = sortParam;
+            }
+
+            // Request high-accuracy location after setting up event listeners
+            setTimeout(() => mapUtils.requestCurrentLocation(true), 100);
         });
 
         // Board data is now available from the parsed JSON
@@ -243,11 +934,68 @@
         const visibleLayers = [];
         const hiddenLayers = [];
 
+        // Get color based on board status
+        function getStatusColor(status) {
+            const colors = {
+                '정상': '#28a745',    // green
+                '숨김': '#6c757d',    // gray
+                '공사 중': '#ffc107',  // yellow
+                '예정': '#17a2b8',    // teal
+                '중단': '#dc3545',    // red
+                '보류': '#343a40'      // dark gray
+            };
+            return colors[status] || '#6c757d'; // default to gray
+        }
+
+        // Create a simple label for the board
+        function createBoardLabel(board) {
+            return L.divIcon({
+                className: 'board-label-icon',
+                html: `
+                    <div class='board-label' 
+                         style='white-space:nowrap; 
+                                background:white; 
+                                padding: 4px 8px; 
+                                border-radius:4px; 
+                                box-shadow: 0 1px 3px rgba(0,0,0,0.2); 
+                                font-size:12px; 
+                                font-weight:bold; 
+                                color: #333 !important;
+                                border: 1px solid #ddd;
+                                transition: background 0.2s ease;'>
+                        ${board.name || '이름 없음'}
+                    </div>
+                `,
+                iconSize: [100, 20],  // Approximate size, will be auto-sized by content
+                iconAnchor: [50, 10]   // Center the label horizontally, align bottom with point
+            });
+        }
+
+        // Create popup content for board markers
         function makePopup(board) {
-            return (
-                '<strong>' + (board.name || 'Untitled') + '</strong>' +
-                '<br><a href="/boards/' + board._id + '/posts">View Posts</a>'
-            );
+            const status = board.siteStatus || '상태 없음';
+            const color = getStatusColor(status);
+            
+            return `
+                <div class="map-popup" style="min-width: 200px;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0 fw-bold">${board.name || '이름 없음'}</h6>
+                        <span class="badge" style="background-color: ${color};">
+                            ${status}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small text-truncate me-2" style="max-width: 150px;" 
+                              title="${board.address || '주소 없음'}">
+                            <i class="bi bi-geo-alt"></i> ${board.address || '주소 없음'}
+                        </span>
+                        <a href="/boards/${board._id}/posts" class="btn btn-sm btn-outline-dark flex-shrink-0" 
+                           style="color: #000; border-color: #000; text-decoration: none;">
+                            상세보기
+                        </a>
+                    </div>
+                </div>
+            `;
         }
 
         function addVisibleLayer(layer) {
@@ -256,10 +1004,54 @@
         }
 
         function buildMarkers() {
-            // Clear existing layers from map
-            visibleLayers.forEach(l => map.removeLayer(l));
-            visibleLayers.length = 0;
-            hiddenLayers.forEach(l => map.removeLayer(l));
+            console.log('Building markers...');
+            
+            // Add custom CSS for markers
+            const style = document.createElement('style');
+            style.textContent = `
+                .custom-div-icon {
+                    position: relative;
+                }
+                .board-label-icon {
+                    background: transparent !important;
+                    border: none !important;
+                }
+                .board-label-icon .board-label {
+                    transform: translateY(-50%);  // Center vertically on the point
+                    transition: all 0.2s ease;
+                }
+                .board-label-icon .board-label:hover {
+                    background: #f1f1f1 !important;
+                }
+                .map-popup {
+                    min-width: 200px;
+                }
+                .map-popup .leaflet-popup-content-wrapper {
+                    border-radius: 8px;
+                    padding: 8px;
+                }
+                .leaflet-tooltip {
+                    background: rgba(255, 255, 255, 0.9);
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+                    padding: 4px 8px;
+                    font-size: 12px;
+                    font-weight: bold;
+                    white-space: nowrap;
+                }
+                .leaflet-tooltip:before {
+                    display: none;
+                }
+                .map-popup .btn {
+                    opacity: 1 !important;
+                    visibility: visible !important;
+                }
+                .map-popup .badge {
+                    background-color: #fff !important;
+                    color: #333 !important;
+                }`;
+            document.head.appendChild(style);
             hiddenLayers.length = 0;
 
             boardData.forEach(function(board) {
@@ -268,40 +1060,47 @@
                 const status = board.siteStatus || '정상';
                 const hasLocation = !(lat === 0 && lng === 0);
                 const coords = hasLocation ? [lat, lng] : [37.5665, 126.9780];
+                
+                // Add distance to popup content if available
+                let popupContent = makePopup(board);
+                if (board.distance !== undefined) {
+                    popupContent = popupContent.replace(
+                        '</div>',
+                        `<div class="mt-1 small text-muted">
+                            <i class="bi bi-geo-alt"></i> 거리: ${board.distance.toFixed(1)}km
+                        </div></div>`
+                    );
+                }
 
-                // Determine layer type by status
+                // Create marker with just the board name label
+                const icon = createBoardLabel(board);
+                const marker = L.marker(coords, { 
+                    icon: icon,
+                    interactive: true,  // Make sure it's clickable for the popup
+                    opacity: status === '숨김' ? 0.6 : 1,
+                    title: board.name || '이름 없음'
+                }).bindPopup(popupContent);
+                
+                // Add click handler to center map on marker
+                marker.on('click', function() {
+                    map.setView(coords, 15);
+                });
+                
+                // Double click to view details
+                marker.on('dblclick', function() {
+                    window.location.href = '/boards/' + board._id + '/posts';
+                });
+                
+                // No need for separate tooltip as we're using the label as the marker
+                
+                // Handle visibility based on status
                 if (status === '숨김') {
-                    const hiddenMarker = L.marker(coords, { opacity: 0.6 }).bindPopup(makePopup(board));
-                    hiddenMarker.on('dblclick', function() {
-                        window.location.href = '/boards/' + board._id + '/posts';
-                    });
-                    // Only add if showHidden is true
                     if (showHidden) {
-                        addVisibleLayer(hiddenMarker);
+                        addVisibleLayer(marker);
                     }
-                    hiddenLayers.push(hiddenMarker);
-                } else if (status === '정상') {
-                    const marker = L.marker(coords).bindPopup(makePopup(board));
-                    // Show site name label above normal markers
-                    const label = board.name || 'Untitled';
-                    marker.bindTooltip(label, { permanent: true, direction: 'top', offset: [0, -10], opacity: 0.9 });
-                    marker.on('dblclick', function() {
-                        window.location.href = '/boards/' + board._id + '/posts';
-                    });
-                    addVisibleLayer(marker);
+                    hiddenLayers.push(marker);
                 } else {
-                    // Other statuses -> gray circle marker
-                    const circle = L.circleMarker(coords, {
-                        radius: 8,
-                        color: '#6c757d',
-                        weight: 2,
-                        fillColor: '#6c757d',
-                        fillOpacity: 0.9
-                    }).bindPopup(makePopup(board));
-                    circle.on('dblclick', function() {
-                        window.location.href = '/boards/' + board._id + '/posts';
-                    });
-                    addVisibleLayer(circle);
+                    addVisibleLayer(marker);
                 }
             });
 

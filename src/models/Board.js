@@ -6,6 +6,7 @@ const BoardSchema = new mongoose.Schema({
   description: { type: String },
   authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // 작성자
   createdAt: { type: Date, default: Date.now }, // 작성일
+  modifiedAt: { type: Date, default: Date.now }, // 수정일
 
   // 위치 정보
   latitude: { type: Number, required: true },

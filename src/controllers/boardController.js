@@ -1,13 +1,74 @@
 const Board = require('../models/Board');
 const User = require('../models/User');
 
-// Show all boards (list view with map)
+// Utility function to calculate distance between two coordinates (Haversine formula)
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos((lat1 * Math.PI) / 180) * 
+    Math.cos((lat2 * Math.PI) / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c; // Distance in km
+}
+
+// Show all boards with pagination, search, filter, and sort
+// Available query params:
+// - page: Page number (default: 1)
+// - limit: Items per page (default: 10)
+// - search: Search term (searches in name and description)
+// - status: Filter by siteStatus
+// - sort: Field to sort by (default: 'name')
+// - order: Sort order ('asc' or 'desc', default: 'asc')
+// - lat/lng: User's current location for distance-based sorting
 exports.getBoards = async (req, res) => {
   try {
-    const boards = await Board.find();
+    // Pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Search and filter
+    const search = req.query.search || '';
+    const status = req.query.status;
+    
+    // Sorting
+    const sortField = req.query.sort || 'name';
+    const sortOrder = req.query.order === 'desc' ? -1 : 1;
+    const sort = { [sortField]: sortOrder };
+
+    // Build query
+    const query = {};
+    
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    if (status) {
+      query.siteStatus = status;
+    }
+
+    // Get total count for pagination
+    const total = await Board.countDocuments(query);
+    
+    // Get boards with pagination and sorting
+    let boards = await Board.find(query)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
     // Get current user's location if logged in
     let currentUserLocation = null;
+    let userLat = parseFloat(req.query.lat);
+    let userLng = parseFloat(req.query.lng);
+    
     if (req.session?.userId) {
       const user = await User.findById(req.session.userId).select('latitude longitude');
       if (user && user.latitude !== null && user.longitude !== null) {
@@ -15,6 +76,29 @@ exports.getBoards = async (req, res) => {
           latitude: user.latitude,
           longitude: user.longitude
         };
+        // Use user's location from session if not provided in query
+        if (!userLat || !userLng) {
+          userLat = user.latitude;
+          userLng = user.longitude;
+        }
+      }
+    }
+
+    // Calculate distance for each board if user location is available
+    if (userLat && userLng) {
+      boards = boards.map(board => ({
+        ...board,
+        distance: calculateDistance(
+          userLat,
+          userLng,
+          board.latitude || 0,
+          board.longitude || 0
+        )
+      }));
+
+      // Sort by distance if requested
+      if (sortField === 'distance') {
+        boards.sort((a, b) => (a.distance - b.distance) * sortOrder);
       }
     }
 
@@ -30,7 +114,20 @@ exports.getBoards = async (req, res) => {
     res.render('boards', {
       boards,
       currentUserLocation,
-      user: userData
+      user: userData,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      },
+      filters: {
+        search,
+        status,
+        sort: sortField,
+        order: sortOrder === 1 ? 'asc' : 'desc'
+      },
+      availableStatuses: ['정상', '숨김', '공사 중', '예정', '중단', '보류']
     });
   } catch (err) {
     console.error('Error fetching boards:', err);

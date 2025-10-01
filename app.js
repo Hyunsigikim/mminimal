@@ -46,7 +46,12 @@ app.get('/', (req, res) => {
   }
 });
 
+// 404 핸들러
+app.use((req, res) => {
+    res.status(404).send('페이지를 찾을 수 없습니다.');
+});
+
 // 서버 시작
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
 });
