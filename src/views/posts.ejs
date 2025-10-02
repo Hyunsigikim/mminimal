@@ -462,9 +462,17 @@
 
                             <% 
                               const __allImgs = [];
-                              if (post && post.imageUrl) { __allImgs.push(post.imageUrl); }
+                              // Add images from the images array first
                               if (post && Array.isArray(post.images) && post.images.length) {
-                                post.images.forEach(function(i){ __allImgs.push(i); });
+                                post.images.forEach(function(img) {
+                                  if (img && !__allImgs.includes(img)) {
+                                    __allImgs.push(img);
+                                  }
+                                });
+                              }
+                              // Add imageUrl only if it's not already in the images array
+                              if (post && post.imageUrl && !__allImgs.includes(post.imageUrl)) {
+                                __allImgs.unshift(post.imageUrl); // Add to beginning for backward compatibility
                               }
                             %>
                             <% if (__allImgs.length > 0) { %>
@@ -522,24 +530,27 @@
                               <% } %>
                             <% } %>
 
-                            <% if (userId && (isAdmin || (post.authorId && String(post.authorId._id) == String(userId)))) { %>
-                                <div class="d-flex gap-2">
-                                    <a href="/posts/<%= post._id %>/comments" class="btn btn-outline-primary btn-sm">
-                                        <i class="bi bi-chat-dots"></i>
-                                        <span class="d-none d-sm-inline"> 상세보기</span>
-                                    </a>
+                            <div class="d-flex gap-2">
+                                <!-- 상세보기 버튼 - 모든 사용자에게 표시 -->
+                                <a href="/posts/<%= post._id %>/comments" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-chat-dots"></i>
+                                    <span class="d-none d-sm-inline"> 상세보기</span>
+                                </a>
+                                
+                                <% if (userId && (isAdmin || (post.authorId && String(post.authorId._id) == String(userId)))) { %>
+                                    <!-- 수정/삭제 버튼 - 작성자와 관리자에게만 표시 -->
                                     <a href="/boards/posts/edit?boardId=<%= boardId %>&postId=<%= post._id %>" class="btn btn-outline-secondary btn-sm">
                                         <i class="bi bi-pencil"></i>
                                         <span class="d-none d-sm-inline"> 수정</span>
                                     </a>
-                                    <form action="/boards/posts/delete?boardId=<%= boardId %>&postId=<%= post._id %>" method="POST" onsubmit="return confirm('Delete this post? Comments will also be removed.');" class="d-inline">
+                                    <form action="/boards/posts/delete?boardId=<%= boardId %>&postId=<%= post._id %>" method="POST" onsubmit="return confirm('이 게시글을 삭제하시겠습니까? 관련 댓글도 모두 삭제됩니다.');" class="d-inline">
                                         <button type="submit" class="btn btn-outline-danger btn-sm">
                                             <i class="bi bi-trash"></i>
                                             <span class="d-none d-sm-inline"> 삭제</span>
                                         </button>
                                     </form>
-                                </div>
-                            <% } %>
+                                <% } %>
+                            </div>
                         </div>
 
                         <!-- Recent Comments Preview -->

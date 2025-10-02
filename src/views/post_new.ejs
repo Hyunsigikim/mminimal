@@ -163,11 +163,24 @@
       return true;
     }
 
+    // Get board ID from URL when the page loads
+    const currentBoardId = (() => {
+      // Try to get from URL first
+      const urlMatch = window.location.pathname.match(/\/boards\/([^\/]+)\/posts/);
+      if (urlMatch && urlMatch[1]) return urlMatch[1];
+      
+      // Fallback to server-side variable
+      return '<%= typeof boardId !== "undefined" ? boardId : "default" %>';
+    })();
+
+    console.log('Current Board ID:', currentBoardId);
+
     function initTinyMCE() {
       if (!window.tinymce) {
         document.getElementById('editor-status').innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Failed to load TinyMCE CDN. Check your network or use an API key.</span>';
         return;
       }
+
       tinymce.init({
         selector: '#editor',
         height: 500,
@@ -177,8 +190,61 @@
         toolbar_mode: 'sliding',
         image_title: true,
         automatic_uploads: true,
-        images_upload_url: '/editor/upload-image',
         images_upload_credentials: true,
+        images_upload_handler: function (blobInfo, progress) {
+          return new Promise((resolve, reject) => {
+            // Get current board ID from URL
+            const urlParts = window.location.pathname.split('/');
+            const boardId = urlParts[2]; // Assuming URL is /boards/:boardId/posts/new
+            
+            if (!boardId) {
+              reject('Board ID not found in URL');
+              return;
+            }
+            
+            const xhr = new XMLHttpRequest();
+            xhr.withCredentials = true;
+            xhr.open('POST', `/boards/${boardId}/editor/upload-image`);
+            
+            // Create FormData and add file
+            const formData = new FormData();
+            formData.append('file', blobInfo.blob(), blobInfo.filename());
+            
+            console.log('Uploading image for board ID:', boardId);
+            
+            xhr.upload.onprogress = (e) => {
+              progress(e.loaded / e.total * 100);
+            };
+            
+            xhr.onload = function() {
+              if (xhr.status < 200 || xhr.status >= 300) {
+                reject(`HTTP Error: ${xhr.status} - ${xhr.statusText}`);
+                return;
+              }
+              
+              let json;
+              try {
+                json = JSON.parse(xhr.responseText);
+              } catch (e) {
+                reject('Invalid JSON response');
+                return;
+              }
+              
+              if (!json || typeof json.location !== 'string') {
+                reject('Invalid response format: missing location');
+                return;
+              }
+              
+              resolve(json.location);
+            };
+            
+            xhr.onerror = function() {
+              reject('Image upload failed due to a network error');
+            };
+            
+            xhr.send(formData);
+          });
+        },
         file_picker_types: 'image',
         convert_urls: false,
         content_style: 'body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; font-size: 16px; }',

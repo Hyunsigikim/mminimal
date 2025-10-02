@@ -15,7 +15,22 @@ mongoose.connect('mongodb://localhost:27017/mminimal');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({ secret: 'secret', resave: false, saveUninitialized: true }));
+
+// Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve uploaded files from data directory
+app.use('/data', express.static(path.join(__dirname, 'data'), {
+  setHeaders: (res, path) => {
+    // Set appropriate cache headers for uploaded files
+    res.set('Cache-Control', 'public, max-age=31536000');
+  }
+}));
+
+// Serve uploaded files from the data/boards directory
+app.use('/data/boards', express.static(path.join(__dirname, 'data/boards')));
+
+// Legacy uploads directory (for backward compatibility)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 세션 디버깅 미들웨어

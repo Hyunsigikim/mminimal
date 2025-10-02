@@ -129,11 +129,13 @@
                             
                             <!-- Sort Options -->
                             <div class="col-md-3">
-                                <select class="form-select" id="sortSelect">
-                                    <option value="name">이름순</option>
-                                    <option value="createdAt">최신순</option>
-                                    <option value="distance" id="distanceSortOption">거리순</option>
+                                <select class="form-select" name="sort" onchange="this.form.submit()">
+                                    <option value="name" <%= filters.sort === 'name' ? 'selected' : '' %>>이름순</option>
+                                    <option value="modifiedAt" <%= filters.sort === 'modifiedAt' ? 'selected' : '' %>>수정일순</option>
+                                    <option value="createdAt" <%= filters.sort === 'createdAt' ? 'selected' : '' %>>생성일순</option>
+                                    <option value="distance" id="distanceSortOption" <%= filters.sort === 'distance' ? 'selected' : '' %>>거리순</option>
                                 </select>
+                                <input type="hidden" name="order" value="<%= filters.order || 'asc' %>">
                             </div>
                             
                             <!-- Items Per Page -->

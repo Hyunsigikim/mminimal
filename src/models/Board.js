@@ -20,11 +20,16 @@ const BoardSchema = new mongoose.Schema({
   tags: { type: [String], index: true } // 태그(검색가능)
 });
 
-// 텍스트 검색을 위한 인덱스 (선택)
+// Add indexes for better query performance
 try {
+  // Text search index
   BoardSchema.index({ name: 'text', description: 'text', memo: 'text', address: 'text', tags: 'text' });
+  
+  // Index for sorting by modifiedAt
+  BoardSchema.index({ modifiedAt: -1 });
 } catch (e) {
   // ignore index creation errors during hot reload
+  console.error('Error creating indexes:', e);
 }
 
 module.exports = mongoose.model('Board', BoardSchema);

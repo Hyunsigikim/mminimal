@@ -1,8 +1,14 @@
+const path = require('path');
+const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
+const mongoose = require('mongoose');
 const Post = require('../models/Post');
 const Comment = require('../models/Comment');
-const mongoose = require('mongoose');
-const User = require('../models/User');
 const Board = require('../models/Board');
+const User = require('../models/User');
+
+// Constants
+const UPLOAD_PATH = path.join(__dirname, '../../uploads');
 
 // Resolve ids from params, query, or body to support both styles
 function getBoardId(req) {
@@ -113,22 +119,29 @@ exports.getPosts = async (req, res) => {
 // 게시글 생성 처리
 exports.createPost = async (req, res) => {
   try {
-    const boardId = getBoardId(req);
-    const { title } = req.body;
-    let { content } = req.body;
-    // Support multiple files via multer.fields: req.files is an object map
+    const boardId = getBoardId(req) || 'default';
+    const { title, content } = req.body;
+    const { getFileUrl } = require('../utils/fileUpload');
+    
+    // Process uploaded files
     let images = [];
-    if (req.files && typeof req.files === 'object') {
-      if (Array.isArray(req.files.images)) {
-        images = req.files.images.map(f => `/uploads/${f.filename}`);
+    if (req.files) {
+      // Handle multiple images
+      if (req.files.images && Array.isArray(req.files.images)) {
+        images = req.files.images.map(file => getFileUrl(req, file.path));
       }
-      // Legacy single field `'image'` may also be present via fields()
-      if (!images.length && Array.isArray(req.files.image) && req.files.image.length > 0) {
-        images = req.files.image.map(f => `/uploads/${f.filename}`);
+      // Handle single image (legacy support)
+      if (req.files.image && Array.isArray(req.files.image) && req.files.image.length > 0) {
+        images = [...images, getFileUrl(req, req.files.image[0].path)];
+      }
+      // Handle single file (from TinyMCE)
+      if (req.files.file && Array.isArray(req.files.file) && req.files.file.length > 0) {
+        images = [...images, getFileUrl(req, req.files.file[0].path)];
       }
     }
-    // Backward compatibility: single file via req.file (when using upload.single)
-    const imageUrl = (!images.length && req.file) ? `/uploads/${req.file.filename}` : null;
+    
+    // Use first image as the main image for backward compatibility
+    const imageUrl = images.length > 0 ? images[0] : null;
 
     // Do not auto-append images into content; views will render a dedicated gallery
 
@@ -149,6 +162,12 @@ exports.createPost = async (req, res) => {
     });
 
     await post.save();
+    
+    // Update the board's modifiedAt timestamp
+    await Board.findByIdAndUpdate(boardId, { 
+      $set: { modifiedAt: new Date() } 
+    });
+    
     return res.redirect(`/posts/${post._id}/comments`);
   } catch (err) {
     console.error('Error creating post:', err);
@@ -173,23 +192,50 @@ exports.showNewPost = async (req, res) => {
 // 빠른 게시글 생성 (board 페이지 유지)
 exports.quickCreatePost = async (req, res) => {
   try {
+    console.log('=== QUICK CREATE POST DEBUG ===');
+    console.log('Request URL:', req.originalUrl);
+    console.log('Request params:', req.params);
+    console.log('Request query:', req.query);
+    console.log('Request body keys:', Object.keys(req.body));
+    
     const boardId = getBoardId(req);
-    const { title } = req.body;
-    let { content } = req.body;
-
-    // Support multiple files via multer.fields: req.files is an object map
+    console.log('Board ID from request:', boardId);
+    
+    if (!boardId) {
+      console.error('Error: No boardId provided');
+      return res.status(400).send('Board ID is required');
+    }
+    
+    const { title, content } = req.body;
+    console.log('Title length:', title?.length);
+    console.log('Content length:', content?.length);
+    
+    const { getFileUrl } = require('../utils/fileUpload');
+    
+    // Process uploaded files
     let images = [];
-    if (req.files && typeof req.files === 'object') {
-      if (Array.isArray(req.files.images)) {
-        images = req.files.images.map(f => `/uploads/${f.filename}`);
+    if (req.files) {
+      console.log('Uploaded files:', Object.keys(req.files));
+      // Handle multiple images
+      if (req.files.images && Array.isArray(req.files.images)) {
+        images = req.files.images.map(file => {
+          const url = getFileUrl(req, file.path);
+          console.log('Processed image URL:', url);
+          return url;
+        });
       }
-      // Legacy single field `'image'` may also be present via fields()
-      if (!images.length && Array.isArray(req.files.image) && req.files.image.length > 0) {
-        images = req.files.image.map(f => `/uploads/${f.filename}`);
+      // Handle single image (legacy support)
+      if (req.files.image && Array.isArray(req.files.image) && req.files.image.length > 0) {
+        images = [...images, ...req.files.image.map(file => getFileUrl(req, file.path))];
+      }
+      // Handle single file (from TinyMCE)
+      if (req.files.file && Array.isArray(req.files.file) && req.files.file.length > 0) {
+        images = [...images, ...req.files.file.map(file => getFileUrl(req, file.path))];
       }
     }
-    // Backward compatibility: single file via req.file (when using upload.single)
-    const imageUrl = (!images.length && req.file) ? `/uploads/${req.file.filename}` : null;
+    
+    // Use first image as the main image for backward compatibility
+    const imageUrl = images.length > 0 ? images[0] : null;
 
     if (!req.session.userId) {
       return res.status(401).send('User not logged in');
@@ -208,6 +254,11 @@ exports.quickCreatePost = async (req, res) => {
     });
 
     await post.save();
+
+    // Update the board's modifiedAt timestamp
+    await Board.findByIdAndUpdate(boardId, { 
+      $set: { modifiedAt: new Date() } 
+    });
 
     // 빠른 생성의 경우 board 페이지로 리다이렉션 (쿼리 파라미터로 성공 표시)
     return res.redirect(`/boards/${boardId}/posts?created=true`);
@@ -284,30 +335,54 @@ exports.updatePost = async (req, res) => {
     const deleteImages = req.body.deleteImages;
     if (deleteImages && Array.isArray(deleteImages)) {
       console.log('Images to delete:', deleteImages);
-      deleteImages.forEach(index => {
+      const fs = require('fs').promises;
+      const path = require('path');
+      
+      // Delete files from server
+      for (const index of deleteImages) {
         const idx = parseInt(index);
         if (!isNaN(idx) && idx >= 0 && idx < post.images.length) {
-          const deletedImage = post.images.splice(idx, 1);
-          console.log('Deleted image:', deletedImage);
+          const imagePath = post.images[idx];
+          try {
+            // Convert URL back to filesystem path
+            const relativePath = imagePath.replace(/^\/data\//, '');
+            const fullPath = path.join(__dirname, '../../data', relativePath);
+            await fs.unlink(fullPath);
+            console.log('Deleted file:', fullPath);
+          } catch (err) {
+            console.error('Error deleting file:', err);
+          }
+          post.images.splice(idx, 1);
           hasChanges = true;
         }
-      });
+      }
     }
 
     // Handle new image uploads
+    const { getFileUrl } = require('../utils/fileUpload');
     let newImages = [];
-    if (req.files && typeof req.files === 'object') {
-      if (Array.isArray(req.files.images)) {
-        newImages = req.files.images.map(f => `/uploads/${f.filename}`);
+    
+    if (req.files) {
+      // Handle multiple images
+      if (req.files.images && Array.isArray(req.files.images)) {
+        newImages = req.files.images.map(file => getFileUrl(req, file.path));
       }
-      // Legacy single field `'image'` may also be present via fields()
-      if (!newImages.length && Array.isArray(req.files.image) && req.files.image.length > 0) {
-        newImages = req.files.image.map(f => `/uploads/${f.filename}`);
+      // Handle single image (legacy support)
+      if (req.files.image && Array.isArray(req.files.image) && req.files.image.length > 0) {
+        newImages = [...newImages, ...req.files.image.map(file => getFileUrl(req, file.path))];
+      }
+      // Handle single file (from TinyMCE)
+      if (req.files.file && Array.isArray(req.files.file) && req.files.file.length > 0) {
+        newImages = [...newImages, ...req.files.file.map(file => getFileUrl(req, file.path))];
       }
     }
 
     if (newImages.length > 0) {
-      post.images.push(...newImages);
+      post.images = [...post.images, ...newImages];
+      // Update imageUrl to the first image if it's not set
+      if (!post.imageUrl || post.imageUrl === '') {
+        post.imageUrl = newImages[0];
+      }
       hasChanges = true;
       console.log('Added new images:', newImages.length);
     }
@@ -448,17 +523,63 @@ exports.createComment = async (req, res) => {
   }
 };
 
-// TinyMCE 이미지 업로드 핸들러
+// TinyMCE 에디터 이미지 업로드
 exports.uploadEditorImage = async (req, res) => {
   try {
+    console.log('=== UPLOAD EDITOR IMAGE DEBUG ===');
+    console.log('Request URL:', req.originalUrl);
+    console.log('Request method:', req.method);
+    console.log('Params:', req.params);
+    console.log('Request file:', req.file);
+    
     if (!req.file) {
+      console.error('No file in request');
       return res.status(400).json({ error: 'No file uploaded' });
     }
-    const location = `/uploads/${req.file.filename}`;
-    // TinyMCE는 { location: 'url' } 형식을 기대함
-    return res.json({ location });
+
+    const file = req.file;
+    console.log('File info:', file);
+
+    // 파일이 저장된 경로 확인
+    if (!file.path) {
+      throw new Error('File path is missing');
+    }
+
+    // URL에서 boardId 추출
+    const boardId = req.params.boardId || 'default';
+    
+    // 파일이 저장된 상대 경로 생성
+    const filePath = file.path.replace(/\\/g, '/');
+    const basePath = path.join('data', 'boards', boardId).replace(/\\/g, '/');
+    
+    // 웹에서 접근 가능한 URL 생성
+    let imageUrl;
+    if (filePath.includes(basePath)) {
+      // 파일이 올바른 보드 디렉토리에 저장된 경우
+      const relativePath = filePath.split('data/boards/').pop();
+      imageUrl = `/data/boards/${relativePath}`;
+    } else {
+      // 파일이 다른 경로에 저장된 경우 (에러 상황)
+      console.error('File saved in wrong directory:', filePath);
+      const error = new Error(`File was not saved in the expected directory. Expected: ${basePath}, Actual: ${filePath}`);
+      console.error(error);
+      return res.status(500).json({ 
+        error: 'File storage error',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+    
+    console.log('Generated image URL:', imageUrl);
+    
+    // TinyMCE가 인식할 수 있도록 location 필드에 URL 반환
+    res.json({
+      location: imageUrl
+    });
   } catch (err) {
     console.error('Error uploading image:', err);
-    return res.status(500).json({ error: 'Image upload failed' });
+    return res.status(500).json({ 
+      error: err.message || 'Image upload failed',
+      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 };

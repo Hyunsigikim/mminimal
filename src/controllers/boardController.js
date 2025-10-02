@@ -46,7 +46,9 @@ exports.getBoards = async (req, res) => {
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { description: { $regex: search, $options: 'i' } },
+        { tags: { $regex: search, $options: 'i' } },
+        { address: { $regex: search, $options: 'i' } }
       ];
     }
     
@@ -59,7 +61,7 @@ exports.getBoards = async (req, res) => {
     
     // Get boards with pagination and sorting
     let boards = await Board.find(query)
-      .sort(sort)
+      .sort(sortField === 'modifiedAt' ? { modifiedAt: -1 } : sort) // Always sort modifiedAt in descending order
       .skip(skip)
       .limit(limit)
       .lean();
